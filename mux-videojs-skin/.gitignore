@@ -1,0 +1,15 @@
+node_modules
+dist
+*.local
+.env
+.env.*
+!.env.example
+.dev.vars
+.DS_Store
+Thumbs.db
+*.log
+
+# Hosting CLIs keep their project links here.
+.vercel
+.netlify
+.wrangler
