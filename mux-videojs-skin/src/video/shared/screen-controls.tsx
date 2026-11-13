@@ -46,10 +46,10 @@ function PiPButton() {
   );
 }
 
-function FullscreenButton() {
+export function FullscreenButton({ className }: { className?: string } = {}) {
   return (
     <ButtonTooltip popupClassName={'[--media-tooltip-side-offset:calc(var(--media-spacing)*3)]!'}>
-      <FullscreenButtonPrimitive render={<Button />} className={'group/fullscreen'}>
+      <FullscreenButtonPrimitive render={<Button className={className} />} className={'group/fullscreen'}>
         <FullscreenEnterIconPrimitive
           className={cn('col-start-1 row-start-1 size-4.5', 'hidden group-not-data-fullscreen/fullscreen:block')}
         />

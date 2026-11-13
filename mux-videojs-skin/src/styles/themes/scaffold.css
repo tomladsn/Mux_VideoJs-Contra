@@ -15,19 +15,19 @@
     --media-popover-foreground: white;
     --media-ring: var(--media-focus-ring, var(--media-accent));
     --media-button-highlight: rgb(255 255 255 / 0.2);
-    --media-video-border-radius: var(--media-border-radius, 0px);
-    --media-control-radius: 0px;
-    --media-controls-radius: 0px;
-    --media-menu-item-radius: 0px;
-    --media-popup-radius: 0px;
-    --media-dialog-radius: 0px;
+    --media-video-border-radius: var(--media-border-radius, 1.25rem);
+    --media-control-radius: 9999px;
+    --media-controls-radius: 1rem;
+    --media-menu-item-radius: 0.5rem;
+    --media-popup-radius: 1rem;
+    --media-dialog-radius: 1.25rem;
     --media-scrollbar-thumb-color: #808080;
-    --media-shadow-surface: none;
-    --media-shadow-surface-inset: none;
-    --media-shadow-thumb: none;
-    --media-backdrop-filter-surface: none;
-    --media-backdrop-filter-indicator: none;
-    --media-backdrop-filter-dialog: none;
+    --media-shadow-surface: 0 4px 20px 0 rgb(0 0 0 / 0.35);
+    --media-shadow-surface-inset: inset 0 1px 0 0 rgb(255 255 255 / 0.12);
+    --media-shadow-thumb: 0 0 12px 0 rgb(56 189 248 / 0.5);
+    --media-backdrop-filter-surface: blur(16px) saturate(140%);
+    --media-backdrop-filter-indicator: blur(12px);
+    --media-backdrop-filter-dialog: blur(20px) saturate(140%);
   }
 
   .media-skin[data-theme="scaffold"][data-preset$="audio"] {

@@ -1,20 +1,16 @@
-import { ArrowTopRightOnSquareIcon, BookOpenIcon, Cog8ToothIcon } from '@heroicons/react/16/solid';
+import { ArrowTopRightOnSquareIcon, BookOpenIcon } from '@heroicons/react/16/solid';
 import { Badge } from '@preview/shell/components/ui/badge';
 import { Button } from '@preview/shell/components/ui/button';
-import { useSidebar } from '@preview/shell/components/ui/sidebar';
 
 import { skin } from './config';
 
 type NavbarProps = {
   /** The preview on its own, to open in a new tab. */
   previewUrl: string;
-  /** The options panel this bar's toggle opens and closes. */
-  optionsId: string;
 };
 
-/** The skin and links out. Everything else sits in the options panel. */
-export function Navbar({ previewUrl, optionsId }: NavbarProps) {
-  const { isMobile, open, openMobile, toggleSidebar } = useSidebar();
+/** The skin identity and preview links. Player adjustments live in the player itself. */
+export function Navbar({ previewUrl }: NavbarProps) {
 
   return (
     <header className="border-border bg-background flex h-14 shrink-0 items-center gap-4 border-b px-4">
@@ -57,24 +53,6 @@ export function Navbar({ previewUrl, optionsId }: NavbarProps) {
           }
         >
           <BookOpenIcon className="size-4" aria-hidden="true" />
-        </Button>
-        <Button
-          id={`${optionsId}-trigger`}
-          type="button"
-          variant="ghost"
-          size="icon-sm"
-          aria-label="Options"
-          aria-expanded={isMobile ? openMobile : open}
-          aria-controls={optionsId}
-          onClick={() => {
-            toggleSidebar();
-
-            if (!isMobile && !open) {
-              requestAnimationFrame(() => document.getElementById(`${optionsId}-close`)?.focus());
-            }
-          }}
-        >
-          <Cog8ToothIcon className="size-4" aria-hidden="true" />
         </Button>
       </div>
     </header>

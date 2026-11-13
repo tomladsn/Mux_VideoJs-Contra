@@ -3,17 +3,24 @@
   color-scheme: light dark;
 }
 
+body, .preview-page {
+  background: var(--spill-room, #0E0C0D);
+  transition: background-color 1.2s ease;
+  min-height: 100vh;
+  padding: 60px 40px;
+}
+@media (prefers-reduced-motion: reduce) {
+  body, .preview-page { transition: none; }
+}
+
 body {
   margin: 0;
-  background: light-dark(#ffffff, #0a0a0a);
 }
 
 .preview-page {
   display: grid;
   place-items: center;
   box-sizing: border-box;
-  min-height: 100vh;
-  padding: 24px;
 }
 
 .preview-player {

@@ -1,0 +1,87 @@
+/* SPILL Design Challenge CSS additions */
+
+/* Mobile double-tap ripple */
+.spill-doubletap-ripple {
+  position: absolute;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: var(--spill-key, #FFB04A);
+  opacity: 0.3;
+  transform: scale(0);
+  animation: spillRipple 0.4s ease-out forwards;
+  pointer-events: none;
+}
+@keyframes spillRipple {
+  to { transform: scale(2.5); opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .spill-doubletap-ripple { animation: none; opacity: 0; }
+}
+
+/* Loading shimmer */
+@keyframes spillShimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.spill-reel-skeleton {
+  background: linear-gradient(90deg, #2a2a2a 25%, #3d3d3d 50%, #2a2a2a 75%);
+  background-size: 200% 100%;
+  animation: spillShimmer 1.5s infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .spill-reel-skeleton { animation: none; background: #2a2a2a; }
+}
+
+/* Focus ring — 2px diffusion + 2px offset + 4px blackwrap outer */
+.media-skin *:focus-visible {
+  outline: 2px solid var(--spill-diffusion, #F4ECDF) !important;
+  outline-offset: 2px !important;
+  box-shadow: 0 0 0 4px var(--spill-blackwrap, #0E0C0D) !important;
+}
+
+/* High contrast mode */
+@media (prefers-contrast: more) {
+  .media-skin [class*="backdrop"] { 
+    backdrop-filter: none !important; 
+    background-opacity: 1 !important;
+  }
+  .media-skin { --spill-rim: transparent; }
+}
+
+/* Touch targets: all interactive elements min 44x44px */
+.media-skin button, .media-skin [role="button"] {
+  min-width: 44px;
+  min-height: 44px;
+}
+
+/* Fullscreen: glow becomes clean edge without intrusive masks */
+.media-skin:fullscreen,
+.media-skin:-webkit-full-screen {
+  box-shadow: none !important;
+}
+.media-skin::after,
+.media-skin::before {
+  content: none !important;
+}
+
+/* Safe area insets for mobile & landscape */
+@supports (padding: env(safe-area-inset-bottom)) {
+  .media-skin {
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+}
+
+/* Hide desktop key strip on touch or under 700px */
+@media (hover: none) and (pointer: coarse) {
+  .spill-desktop-key-strip {
+    display: none !important;
+  }
+}
+@media (max-width: 700px) {
+  .spill-desktop-key-strip {
+    display: none !important;
+  }
+}

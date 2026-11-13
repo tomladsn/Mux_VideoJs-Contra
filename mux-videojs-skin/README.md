@@ -1,52 +1,158 @@
-# mux-videojs-skin
+# Mux Video.js Custom Skin & "All Terrain" Showcase
 
-A Video.js video skin for React, styled with Tailwind CSS. It started from the Scaffold skin.
+[![React 19](https://img.shields.io/badge/React-19-blue.svg)](https://react.dev/)
+[![Video.js](https://img.shields.io/badge/Video.js-10.3-red.svg)](https://videojs.org/)
+[![Tailwind CSS](https://img.shields.io/badge/TailwindCSS-v4-38bdf8.svg)](https://tailwindcss.com/)
+[![Vite](https://img.shields.io/badge/Vite-8-646cff.svg)](https://vitejs.dev/)
 
-## Develop
+A modern, cinematic custom **Video.js** skin built with **React** and **Tailwind CSS**, accompanied by the **All Terrain** editorial landing page showcase.
 
-```sh
+Designed for high-impact media playback with reactive ambient backlighting, customized glassmorphic controls, interactive chapters, gestures, and a curated film collection experience powered by **Mux**.
+
+---
+
+## ✨ Features
+
+### 🎬 Video Player & Custom Skin (`src/video`)
+- **Reactive Ambient Glow Engine**: Dynamic edge lighting and room backdrop that shifts color in response to playback and dominant hues.
+- **Glassmorphic Deck Controls**: Custom seek buttons, timeline scrubber with thumbnail previews, playback speed picker, and settings menu.
+- **Micro-Interactions & Gestures**: Smooth animations, double-tap seek indicators, swipe gestures, and keyboard shortcut overlays (`?` key).
+- **Chapter Support & Scrubber Markers**: Built-in WebVTT chapter markers with interactive tooltips.
+- **Onboarding & Feedback Systems**: First-visit discovery chips, keyboard hotkey visualizers, and state announcer feedback.
+
+### 🌿 "All Terrain" Editorial Landing Page (`/landing.html`)
+- **Cinematic Dark Nature Aesthetic**: Olive-tinted frosted glass, warm gold accent badges, and adaptive full-bleed background imagery.
+- **Integrated Hero Stage**: Video player seamlessly mounted into an editorial frame with custom metadata headers (Selected Film, Resolution Badges, Action Buttons).
+- **Curated Film Collection**: Interactive playlist sidebar supporting instant switching, automatic poster background transitions, and responsive mobile drawers.
+- **Smooth Play-on-Demand CTA**: Frosted pill overlay button that launches video playback directly.
+
+---
+
+## 🚀 Quick Start
+
+### Prerequisites
+- [Node.js](https://nodejs.org/) (v18+)
+- [pnpm](https://pnpm.io/) (v9+)
+
+### Installation
+
+```bash
+# Install dependencies
+pnpm install
+```
+
+### Running Locally
+
+```bash
+# Start the Vite development server
 pnpm dev
 ```
 
-The workbench opens your skin in a slimmed-down version of the Video.js sandbox. It plays NASA's Cosmic Dawn trailer from Mux, with chapters. Set the final public Mux Playback ID in `src/config/mux.ts`; the preview imports that source-level configuration. The options panel sets the player's width and aspect ratio, the color scheme, text direction, and language, and playback options such as autoplay, muted, loop, and preload. The arrow button opens the preview on its own. The settings live in the URL, so a link such as `/?width=384&ratio=9:16&dir=rtl&locale=ar` opens the workbench in that state, and `/preview.html#width=384&ratio=9:16` opens the preview alone.
+Once running, visit:
+- **All Terrain Landing Page**: [http://localhost:5173/landing.html](http://localhost:5173/landing.html)
+- **Workbench & Customizer Shell**: [http://localhost:5173/](http://localhost:5173/)
+- **Standalone Skin Preview**: [http://localhost:5173/preview.html](http://localhost:5173/preview.html)
 
-## Deploy
+---
 
-```sh
+## 📁 Project Structure
+
+```text
+mux-videojs-skin/
+├── apps/
+│   └── preview/                  # Workbench and showcase apps
+│       ├── landing.html          # Entry point for the "All Terrain" landing page
+│       ├── preview.html          # Standalone isolated player preview
+│       ├── index.html            # Workbench shell UI with customization controls
+│       └── src/
+│           ├── landing/          # Landing page React components & styles
+│           ├── frame/            # Preview frame player host
+│           └── shell/            # Interactive inspector & controls panel
+├── src/                          # Reusable Video.js Skin Core
+│   ├── config/
+│   │   └── mux.ts                # Mux stream playback configuration & playlist data
+│   ├── styles/
+│   │   ├── themes/               # Design tokens (Scaffold, custom palette)
+│   │   └── video/                # Component-level styles & ambient glow rules
+│   ├── video/
+│   │   ├── behaviors/            # Gesture and keyboard hotkey listeners
+│   │   ├── shared/               # Modular controls (scrubbers, buttons, menus)
+│   │   ├── spill/                # Playlist shelf, overlays, shortcuts modal
+│   │   ├── ambient-glow.tsx      # Reactive lighting backdrop engine
+│   │   ├── controls.tsx          # Custom control deck layout
+│   │   └── skin.tsx              # Main <VideoSkin /> wrapper component
+│   └── skin.css                  # Main skin stylesheet (Tailwind CSS v4)
+├── package.json
+└── vite.config.ts
+```
+
+---
+
+## ⚙️ Configuration & Mux Playback
+
+You can configure public Mux playback IDs and playlist data in [`src/config/mux.ts`](src/config/mux.ts):
+
+```typescript
+export const MUX_PLAYBACK_ID = 'your-playback-id';
+
+export const programme: ProgrammeItem[] = [
+  {
+    id: '1',
+    title: 'The beauty of still frames',
+    muxPlaybackId: 'your-mux-playback-id',
+    duration: 173,
+    poster: 'https://image.mux.com/your-mux-playback-id/thumbnail.webp',
+    dominantColour: 'oklch(0.65 0.14 290)',
+  },
+  // ...
+];
+```
+
+---
+
+## 🛠️ Build & Deployment
+
+### Production Build
+
+```bash
+pnpm run build
+```
+
+Compiled static assets are generated in `dist/`.
+
+### Deployment Options
+
+```bash
+# Interactive deployment CLI (Vercel, Netlify, Cloudflare)
 pnpm run deploy
-```
 
-It asks where to deploy the workbench: Vercel, Netlify, or Cloudflare Pages. Name one to skip the question, such as `pnpm run deploy vercel`. The first time, the host's CLI signs you in and creates the project, then every run prints the URL. Vercel and Netlify deploy to a preview URL you can share; to deploy to production instead, add `--prod` to the `deploy:netlify` script, or to both commands in `deploy:vercel`.
-
-To deploy on every push instead, put the project on GitHub and import it on Vercel or Netlify; `vercel.json` and `netlify.toml` already describe the build. The build uses relative URLs, so `dist/` also works on any static host, including in a subfolder.
-
-### Cloudflare Pages
-
-Deploy the shareable production preview with:
-
-```sh
+# Cloudflare Pages directly
 pnpm run deploy:cloudflare
+
+# Vercel
+pnpm run deploy:vercel
+
+# Netlify
+pnpm run deploy:netlify
 ```
 
-On the first run, Wrangler opens a browser window so you can sign in to Cloudflare and then creates (or reuses) the `mux-videojs-skin` Pages project. The command prints the public `pages.dev` URL when publishing finishes. Future deployments use the same command.
+---
 
-Before sharing the final challenge entry, replace the demo Playback ID in `src/config/mux.ts` with the supplied public Mux Playback ID and confirm that asset will remain live during judging.
+## ⌨️ Keyboard Shortcuts (Inside Player)
 
-## Where things live
+| Key | Action |
+|---|---|
+| <kbd>Space</kbd> / <kbd>k</kbd> | Play / Pause |
+| <kbd>j</kbd> / <kbd>l</kbd> | Seek backward / forward (10s) |
+| <kbd>←</kbd> / <kbd>→</kbd> | Seek backward / forward (5s) |
+| <kbd>↑</kbd> / <kbd>↓</kbd> | Volume up / down (5%) |
+| <kbd>m</kbd> | Toggle Mute |
+| <kbd>f</kbd> | Toggle Fullscreen |
+| <kbd>p</kbd> | Toggle Picture-in-Picture |
+| <kbd>?</kbd> | Toggle Keyboard Shortcuts Cheatsheet |
 
-- `src/`: your skin, and only your skin. Keep, rewrite, or delete any of it.
-  - `src/video/`: the skin component and its parts.
-  - `src/styles/`: theme tokens and shared styles the skin imports, when it started from a packaged skin.
-  - `src/skin.css`: global styles for the skin.
-- `apps/preview/`: the workbench that previews the skin. You don't need to change it.
-  - `src/shell/`: the Shadcn shell.
-  - `src/frame/`: the page the shell frames. `player` mounts your skin in a player and sets the media it plays.
-  - `public/`: files the preview serves, such as the chapters track.
-- `vercel.json`, `netlify.toml`: how those hosts build the workbench.
-- `skin.json`: what this skin is built from. Keep it; it records the Video.js version the skin was created with.
+---
 
-## Learn more
+## 📄 License
 
-- [Build your own skin](https://videojs.org/docs/framework/react/guides/build-your-own-skin)
-- [Customize skins](https://videojs.org/docs/framework/react/guides/customize-skins)
-- [UI components](https://videojs.org/docs/framework/react/guides/ui-components)
+Private / Challenge Submission. All rights reserved.

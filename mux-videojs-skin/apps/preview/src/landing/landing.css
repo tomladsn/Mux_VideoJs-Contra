@@ -1,0 +1,2225 @@
+/* ─────────────────────────────────────────────────────────────
+   SPILL — Video.js v10 Skin Landing Page & Cinema Experience
+   ───────────────────────────────────────────────────────────── */
+
+@import "tailwindcss";
+
+:root {
+  --spill-cream: #F4EEE5;
+  --spill-cream-card: #ECE4D8;
+  --spill-dark: #0C0A10;
+  --spill-dark-card: #130F19;
+  --spill-pink: #FF6392;
+  --spill-pink-hover: #FF4D85;
+  --spill-light-pink: #D93872;
+  --spill-text-dark: #161418;
+  --spill-text-muted: #6E6872;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+  font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  color: var(--spill-text-dark);
+  background-color: var(--spill-cream);
+  transition: background-color 0.65s cubic-bezier(0.16, 1, 0.3, 1), color 0.65s ease;
+  overflow-x: hidden;
+}
+
+/* Serif font classes */
+.font-editorial-serif {
+  font-family: 'Playfair Display', Georgia, serif;
+}
+
+.font-editorial-italic {
+  font-family: 'Newsreader', 'Playfair Display', Georgia, serif;
+  font-style: italic;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   CUSTOM SPILL MOUSE CURSOR
+   A luminous, sleek glowing ring + dot cursor reflecting SPILL's
+   "let the video light the room" ambient design principle
+   ───────────────────────────────────────────────────────────── */
+
+@media (pointer: fine) {
+  body, button, a, [role="button"] {
+    cursor: none !important;
+  }
+}
+
+.spill-cursor-dot {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #FF4D85;
+  box-shadow: 0 0 10px rgba(255, 77, 133, 0.9), 0 0 20px rgba(255, 77, 133, 0.5);
+  pointer-events: none;
+  z-index: 99999;
+  transform: translate(-50%, -50%);
+  transition: transform 0.08s ease-out, background-color 0.2s ease, width 0.2s ease, height 0.2s ease;
+}
+
+.spill-cursor-ring {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(255, 77, 133, 0.45);
+  background: rgba(255, 77, 133, 0.05);
+  backdrop-filter: blur(1px);
+  pointer-events: none;
+  z-index: 99998;
+  transform: translate(-50%, -50%);
+  transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), width 0.2s ease, height 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+}
+
+/* Hovering over clickable items expands ring softly */
+body:has(a:hover, button:hover, [role="button"]:hover) .spill-cursor-ring {
+  width: 44px;
+  height: 44px;
+  border-color: rgba(255, 77, 133, 0.8);
+  background: rgba(255, 77, 133, 0.12);
+}
+
+body:has(a:hover, button:hover, [role="button"]:hover) .spill-cursor-dot {
+  transform: translate(-50%, -50%) scale(1.4);
+}
+
+/* ── Container shell ── */
+.spill-app-root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  transition: background-color 0.65s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow-x: hidden;
+}
+
+.spill-app-root[data-cinema="true"] {
+  background-color: var(--spill-dark);
+  color: #FFFFFF;
+}
+
+/* ── Ambient Backlight Glow in Cinema Mode ──
+   The glow effect is delivered by the box-shadow on .media-skin (set by ambient-glow.tsx).
+   The backdrop here is kept as a very subtle dark vignette only — no coloured orbs.
+   Let the VIDEO's own colours illuminate the dark room, not pre-baked gradients. */
+.spill-ambient-backdrop {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0;
+  transition: opacity 0.8s ease-in-out;
+  overflow: hidden;
+}
+
+.spill-app-root[data-cinema="true"] .spill-ambient-backdrop {
+  opacity: 1;
+}
+
+/* Orbs removed — static coloured blobs fight the video instead of letting it illuminate the room.
+   The reactive box-shadow on .media-skin (from ambient-glow.tsx) is the correct approach. */
+.spill-glow-orb-1,
+.spill-glow-orb-2,
+.spill-glow-orb-3 {
+  display: none;
+}
+
+/* ── Top Navigation Bar ── */
+.spill-nav {
+  position: relative;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.25rem 0.5rem;
+  max-width: 1320px;
+  margin: 0 auto;
+  width: 100%;
+  flex-shrink: 0;
+}
+
+@media (min-width: 768px) {
+  .spill-nav {
+    padding: 2rem 3rem;
+  }
+}
+
+.spill-logo {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  font-size: 0.95rem;
+  text-decoration: none;
+  color: inherit;
+  user-select: none;
+}
+
+.spill-logo-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #FF6B9D 0%, #FA4D87 100%);
+  box-shadow: 0 0 10px rgba(250, 77, 135, 0.6);
+}
+
+.spill-logo-plain {
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  font-size: 0.9rem;
+  color: #FFFFFF;
+  user-select: none;
+}
+
+.spill-nav-links {
+  display: flex;
+  align-items: center;
+  gap: 1.75rem;
+}
+
+.spill-nav-link {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: inherit;
+  opacity: 0.8;
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 0.25rem 0.5rem;
+  transition: opacity 0.2s ease;
+  text-decoration: none;
+}
+
+.spill-nav-link:hover {
+  opacity: 1;
+}
+
+/* Lights up button in header */
+.spill-lights-up-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(12px);
+  padding: 0.4rem 1.15rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: #FFFFFF;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.spill-lights-up-btn:hover {
+  background: rgba(255, 255, 255, 0.16);
+  border-color: rgba(255, 255, 255, 0.35);
+  transform: translateY(-1px);
+}
+
+.spill-lights-up-btn:active {
+  transform: translateY(0);
+}
+
+.spill-shortcuts-btn {
+  padding: 0.5rem !important;
+  width: 2rem !important;
+  height: 2rem !important;
+  justify-content: center !important;
+}
+
+.spill-key-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.1rem 0.4rem;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.2);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
+/* ── Main Landing Hero ── */
+.spill-main-container {
+  position: relative;
+  z-index: 10;
+  flex: 1;
+  max-width: 1320px;
+  margin: 0 auto;
+  width: 100%;
+  padding: 0.5rem 1rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+}
+
+@media (min-width: 768px) {
+  .spill-main-container {
+    padding: 1.5rem 3rem 4rem;
+  }
+}
+
+/* Hero 2-column layout */
+.spill-hero-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2.5rem;
+  align-items: center;
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+
+@media (min-width: 1024px) {
+  .spill-hero-grid {
+    grid-template-columns: 1.05fr 1fr;
+    gap: 4rem;
+    min-height: 480px;
+  }
+}
+
+/* Hero left content — PREVENT ANY INLINE BOX-SHADOW FROM LEAKING */
+.spill-hero-left {
+  transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1), transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: none !important; /* Explicitly block any leaked ambient-glow shadow */
+}
+
+/* Dissolve animation: all landing elements smoothly dissolve to dark */
+.spill-hero-left.is-dissolving,
+.spill-preview-card-wrapper.is-dissolving,
+.spill-features-row.is-dissolving,
+.spill-library.is-dissolving,
+.spill-footer.is-dissolving {
+  opacity: 0 !important;
+  transform: scale(0.98) translateY(-6px) !important;
+  transition: opacity 0.85s cubic-bezier(0.4, 0, 0.2, 1), transform 0.85s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  pointer-events: none !important;
+}
+
+.spill-app-root[data-cinema="true"] .spill-hero-left,
+.spill-app-root[data-cinema="true"] .spill-features-row,
+.spill-app-root[data-cinema="true"] .spill-library,
+.spill-app-root[data-cinema="true"] .spill-footer {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(12px);
+  position: absolute;
+  visibility: hidden;
+}
+
+.spill-hero-tag {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--spill-text-muted);
+  margin-bottom: 1.25rem;
+}
+
+.spill-hero-title {
+  font-size: 3.25rem;
+  line-height: 1.08;
+  letter-spacing: -0.025em;
+  font-weight: 600;
+  color: var(--spill-text-dark);
+  margin-bottom: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .spill-hero-title {
+    font-size: 4.5rem;
+  }
+}
+
+.spill-hero-title .spill-accent-word {
+  color: var(--spill-light-pink);
+  font-family: 'Newsreader', 'Playfair Display', Georgia, serif;
+  font-style: italic;
+  font-weight: 400;
+}
+
+.spill-hero-desc {
+  font-size: 1.0625rem;
+  line-height: 1.6;
+  color: var(--spill-text-muted);
+  max-width: 440px;
+  margin-bottom: 2.25rem;
+}
+
+.spill-hero-cta-row {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.spill-play-film-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.625rem;
+  border-radius: 9999px;
+  background: #110F13;
+  color: #FFFFFF;
+  padding: 0.875rem 1.75rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.spill-play-film-btn:hover {
+  background: #25222A;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.18);
+}
+
+.spill-play-film-btn:active {
+  transform: translateY(0);
+}
+
+/* ─────────────────────────────────────────────────────────────
+   SHORTCUTS INSTRUCTION IN HOME SECTION
+   Matches Design notes & nav link color scheme & aesthetic
+   ───────────────────────────────────────────────────────────── */
+
+.spill-shortcuts-cta {
+  font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--spill-text-dark);
+  opacity: 0.8;
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 0.35rem 0.5rem;
+  border-radius: 6px;
+  transition: opacity 0.2s ease, background-color 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  text-underline-offset: 3px;
+}
+
+.spill-shortcuts-cta:hover {
+  opacity: 1;
+  text-decoration-color: currentColor;
+  background: rgba(0, 0, 0, 0.04);
+}
+
+/* ── Hero Right: Video Preview Card ── */
+.spill-preview-card-wrapper {
+  position: relative;
+  width: 100%;
+  transition: all 0.75s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.spill-preview-ambient-glow {
+  position: absolute;
+  inset: -15px -20px;
+  background: radial-gradient(ellipse at 50% 60%, rgba(255, 99, 146, 0.32) 0%, rgba(255, 170, 110, 0.24) 40%, transparent 70%);
+  filter: blur(28px);
+  opacity: 0.9;
+  border-radius: 2rem;
+  pointer-events: none;
+  transition: opacity 0.5s ease;
+}
+
+.spill-preview-card {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  width: 100%;
+  border-radius: 1.25rem;
+  overflow: hidden;
+  background: #14101A;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.15);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.spill-preview-poster {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.spill-card-badge {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.35rem 0.85rem;
+  border-radius: 9999px;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #FFFFFF;
+  font-size: 0.75rem;
+  font-weight: 500;
+  z-index: 2;
+}
+
+.spill-card-play-btn {
+  position: relative;
+  z-index: 2;
+  width: 4rem;
+  height: 4rem;
+  border-radius: 50%;
+  background: #FAF5EE;
+  color: #121015;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.35);
+  border: none;
+  cursor: pointer;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s ease;
+}
+
+.spill-card-play-btn:hover {
+  transform: scale(1.08);
+  background: #FFFFFF;
+}
+
+.spill-card-play-btn:active {
+  transform: scale(0.95);
+}
+
+.spill-card-color-bar {
+  position: absolute;
+  bottom: 0.75rem;
+  left: 0.75rem;
+  right: 0.75rem;
+  height: 0.625rem;
+  border-radius: 4px;
+  overflow: hidden;
+  display: flex;
+  z-index: 2;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+.spill-color-segment {
+  height: 100%;
+  flex: 1;
+}
+
+/* ── Cinema Mode Container (Desktop Frame 3) ── */
+.spill-cinema-wrapper {
+  position: relative;
+  width: 100%;
+  max-width: 1060px;
+  margin: 0 auto;
+  border-radius: 1.5rem;
+  transition: all 0.75s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 0 60px rgba(255, 99, 146, 0.22), 0 20px 40px rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(255, 99, 146, 0.3);
+}
+
+/* Responsive display switches between Desktop and Mobile Cinema */
+@media (max-width: 767px) {
+  /* Three nav items plus the logo need to fit a 360px phone. */
+  .spill-nav-links {
+    gap: 0.7rem;
+  }
+
+  .spill-nav-link {
+    font-size: 0.78rem;
+    padding: 0.25rem 0.2rem;
+  }
+
+  .spill-desktop-cinema {
+    display: none !important;
+  }
+  .spill-mobile-cinema {
+    display: flex !important;
+  }
+
+  /* Keep mobile cinema locked to viewport height with no scroll */
+  .spill-app-root[data-cinema="true"] {
+    height: 100svh;
+    max-height: 100svh;
+    overflow: hidden;
+  }
+
+  .spill-app-root[data-cinema="true"] .spill-main-container {
+    padding: 0.25rem 0.85rem 0.5rem;
+    overflow: hidden;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .spill-app-root[data-cinema="true"] .spill-nav {
+    padding: 0.75rem 1rem 0.25rem;
+  }
+}
+
+@media (min-width: 768px) {
+  .spill-mobile-cinema {
+    display: none !important;
+  }
+  .spill-desktop-cinema {
+    display: block !important;
+  }
+}
+
+/* ── Bottom Features (3 Columns) ── */
+.spill-features-row {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2rem;
+  margin-top: 5rem;
+  padding-top: 2rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+
+@media (min-width: 768px) {
+  .spill-features-row {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 3rem;
+  }
+}
+
+.spill-feature-col {
+  display: flex;
+  flex-direction: column;
+}
+
+.spill-feature-num {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  color: var(--spill-text-muted);
+  margin-bottom: 0.75rem;
+}
+
+.spill-feature-title {
+  font-size: 1.25rem;
+  font-weight: 500;
+  color: var(--spill-text-dark);
+  margin-bottom: 0.65rem;
+}
+
+.spill-feature-text {
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: var(--spill-text-muted);
+}
+
+/* ── Footer ── */
+.spill-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 4rem;
+  padding-top: 1.5rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  color: var(--spill-text-muted);
+  opacity: 0.75;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   MOBILE PLAYER UI (Frame 1) — 100% Matching Target Design
+   With full-page reactive projection color influence on dark base!
+   ───────────────────────────────────────────────────────────── */
+
+/* ── Cinema mode: pure dark room — the video + its box-shadow glow illuminate the space ── */
+.spill-app-root[data-cinema="true"] {
+  background-color: var(--spill-dark);
+  background-image: none;
+  transition: background-color 0.65s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.spill-mobile-cinema-layout {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 420px;
+  margin: 0 auto;
+  flex: 1;
+  min-height: 0;
+  gap: 0.25rem;
+  box-sizing: border-box;
+  overflow: hidden;
+  padding: 0.25rem 0 max(0.5rem, env(safe-area-inset-bottom));
+}
+
+/* The stage absorbs all free height, so the video is dead-centre when the
+   chrome is hidden and drifts up naturally when the chrome slides back in. */
+.spill-mobile-video-stage {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  isolation: isolate;
+}
+
+/* Let the film's own colour spill into the dark room behind the frame.
+   --film-ambient-glow is written live by the ambient engine (4 fps on mobile). */
+.spill-mobile-video-stage::before {
+  content: '';
+  position: absolute;
+  inset: 6% -8%;
+  z-index: -1;
+  border-radius: 50%;
+  background: radial-gradient(
+    ellipse at 50% 50%,
+    var(--film-ambient-glow, var(--film-fallback-glow, rgba(255, 92, 138, 0.2))) 0%,
+    transparent 70%
+  );
+  filter: blur(42px);
+  opacity: 0.85;
+  pointer-events: none;
+  transition: background 0.65s ease, opacity 0.4s ease;
+}
+
+/* ── HDR ambient spill ──
+   The picture is the only light source. The fixed backdrop carries big, soft
+   blobs of the live key + fill colours so the whole room reads as lit by the
+   video, the way an HDR TV bleeds into a dark wall. */
+@media (max-width: 767px) {
+  /* Static fallback first: older engines that drop color-mix still get spill. */
+  .spill-app-root[data-cinema="true"] .spill-ambient-backdrop {
+    background:
+      radial-gradient(120% 75% at 50% 2%, rgba(255, 92, 138, 0.32) 0%, rgba(255, 92, 138, 0) 62%),
+      radial-gradient(95% 65% at 6% 100%, rgba(124, 58, 237, 0.28) 0%, rgba(124, 58, 237, 0) 70%),
+      radial-gradient(95% 65% at 94% 94%, rgba(255, 92, 138, 0.24) 0%, rgba(255, 92, 138, 0) 68%);
+    background:
+      radial-gradient(
+        120% 75% at 50% 2%,
+        color-mix(in oklab, var(--spill-key, #ff5c8a) 30%, transparent) 0%,
+        transparent 62%
+      ),
+      radial-gradient(
+        95% 65% at 6% 100%,
+        color-mix(in oklab, var(--spill-fill, #7c3aed) 26%, transparent) 0%,
+        transparent 70%
+      ),
+      radial-gradient(
+        95% 65% at 94% 94%,
+        color-mix(in oklab, var(--spill-key, #ff5c8a) 22%, transparent) 0%,
+        transparent 68%
+      );
+    filter: blur(10px);
+    opacity: 1;
+    transition: background 0.9s linear;
+  }
+
+  .spill-app-root[data-cinema="true"] .spill-glow-orb-1,
+  .spill-app-root[data-cinema="true"] .spill-glow-orb-2,
+  .spill-app-root[data-cinema="true"] .spill-glow-orb-3 {
+    display: block;
+    position: absolute;
+    border-radius: 50%;
+    pointer-events: none;
+    filter: blur(64px);
+    opacity: 0.7;
+    will-change: transform, opacity;
+  }
+
+  .spill-app-root[data-cinema="true"] .spill-glow-orb-1 {
+    width: 66vw;
+    height: 66vw;
+    left: -14vw;
+    top: 2vh;
+    background: radial-gradient(
+      circle,
+      rgba(255, 92, 138, 0.42) 0%,
+      rgba(255, 92, 138, 0) 68%
+    );
+    background: radial-gradient(
+      circle,
+      color-mix(in oklab, var(--spill-key, #ff5c8a) 42%, transparent) 0%,
+      transparent 68%
+    );
+    animation: spillDriftA 18s ease-in-out infinite alternate;
+  }
+
+  .spill-app-root[data-cinema="true"] .spill-glow-orb-2 {
+    width: 60vw;
+    height: 60vw;
+    right: -12vw;
+    top: 34vh;
+    background: radial-gradient(
+      circle,
+      rgba(124, 58, 237, 0.38) 0%,
+      rgba(124, 58, 237, 0) 68%
+    );
+    background: radial-gradient(
+      circle,
+      color-mix(in oklab, var(--spill-fill, #7c3aed) 38%, transparent) 0%,
+      transparent 68%
+    );
+    animation: spillDriftB 22s ease-in-out infinite alternate;
+  }
+
+  .spill-app-root[data-cinema="true"] .spill-glow-orb-3 {
+    width: 74vw;
+    height: 74vw;
+    left: 14vw;
+    bottom: -20vh;
+    background: radial-gradient(
+      circle,
+      rgba(255, 92, 138, 0.3) 0%,
+      rgba(255, 92, 138, 0) 72%
+    );
+    background: radial-gradient(
+      circle,
+      color-mix(in oklab, var(--spill-key, #ff5c8a) 30%, transparent) 0%,
+      transparent 72%
+    );
+    animation: spillDriftA 26s ease-in-out infinite alternate-reverse;
+  }
+
+  @keyframes spillDriftA {
+    from { transform: translate3d(0, 0, 0) scale(1); }
+    to { transform: translate3d(6vw, 3vh, 0) scale(1.08); }
+  }
+
+  @keyframes spillDriftB {
+    from { transform: translate3d(0, 0, 0) scale(1.05); }
+    to { transform: translate3d(-5vw, -3vh, 0) scale(0.96); }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spill-app-root[data-cinema="true"] .spill-glow-orb-1,
+  .spill-app-root[data-cinema="true"] .spill-glow-orb-2,
+  .spill-app-root[data-cinema="true"] .spill-glow-orb-3 {
+    animation: none !important;
+  }
+}
+
+/* ── Mobile chrome: title + timestamp + seek reel + controls ──
+   Collapses to 0fr so it leaves the layout entirely instead of just
+   fading in place (the video is what should be centred). */
+.spill-mobile-chrome-shell {
+  display: grid;
+  grid-template-rows: 1fr;
+  flex-shrink: 0;
+  min-height: 0;
+  transition:
+    grid-template-rows 0.34s cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 0.26s ease;
+}
+
+.spill-mobile-chrome {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-height: 0;
+  overflow: hidden;
+  transform: translateY(0);
+  opacity: 1;
+  transition:
+    transform 0.34s cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 0.26s ease;
+}
+
+.spill-mobile-cinema-layout[data-ui-visible="false"] .spill-mobile-chrome-shell {
+  grid-template-rows: 0fr;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.spill-mobile-cinema-layout[data-ui-visible="false"] .spill-mobile-chrome {
+  transform: translateY(14px);
+  opacity: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spill-mobile-chrome-shell,
+  .spill-mobile-chrome {
+    transition-duration: 0.001ms !important;
+  }
+}
+
+/* ── Mobile-only dark room ──
+   Near-black canvas so the picture is the only light source; the stage glow
+   above carries the film colour instead of a fixed pink wash. */
+@media (max-width: 767px) {
+  .spill-app-root[data-cinema="true"] {
+    background-color: #060409;
+  }
+
+  body:has(.spill-app-root[data-cinema="true"]) {
+    background-color: #060409;
+  }
+
+  /* The top nav belongs to the chrome, so it fades with the panels. */
+  .spill-app-root[data-cinema="true"] .spill-nav {
+    max-height: 90px;
+    overflow: hidden;
+    transition:
+      opacity 0.3s ease,
+      transform 0.34s cubic-bezier(0.16, 1, 0.3, 1),
+      max-height 0.34s cubic-bezier(0.16, 1, 0.3, 1),
+      padding 0.34s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .spill-app-root[data-cinema="true"][data-mobile-ui="false"] .spill-nav {
+    max-height: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    opacity: 0;
+    transform: translateY(-10px);
+    pointer-events: none;
+  }
+
+  .spill-mobile-chrome {
+    gap: 0.1rem;
+  }
+}
+
+/* Responsive aspect-ratio video container:
+   Adapts cleanly to 16:9 landscape or 9:16 / 4:5 portrait */
+.spill-mobile-video-container {
+  position: relative !important;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  max-height: min(48vh, 100%);
+  border-radius: 1.125rem;
+  overflow: hidden;
+  /* The frame emits the film's live key/fill colour into the dark room.
+     Static fallback first, then the live colours when color-mix is supported. */
+  box-shadow:
+    0 0 46px 8px rgba(255, 92, 138, 0.45),
+    0 0 120px 28px rgba(124, 58, 237, 0.3),
+    0 22px 60px rgba(0, 0, 0, 0.78);
+  box-shadow:
+    0 0 46px 8px color-mix(in oklab, var(--spill-key, #ff5c8a) 46%, transparent),
+    0 0 120px 28px color-mix(in oklab, var(--spill-fill, #7c3aed) 30%, transparent),
+    0 22px 60px rgba(0, 0, 0, 0.78);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: #000000;
+  flex-shrink: 0;
+  transition:
+    aspect-ratio 0.3s ease,
+    max-height 0.3s ease,
+    box-shadow 0.35s linear;
+}
+
+.spill-mobile-video-container[data-ar="portrait"] {
+  aspect-ratio: 9 / 16;
+  width: auto;
+  height: 100%;
+  max-height: min(52vh, 100%);
+  max-width: 64%;
+}
+
+/* Make inner VideoPlayer edge-to-edge — badge span is excluded so it stays
+   as a small chip, not a full-screen overlay */
+.spill-mobile-video-container > *:not(.spill-mobile-video-badge) {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* ── Hide VideoJS custom Poster overlay in mobile cinema view ──
+   The native <video poster> attribute has been removed from mobile VideoPlayer,
+   but the custom Poster primitive (from @videojs/react) may also show a thumbnail.
+   Force it hidden — pure black from bg-black on .media-skin is the correct pre-play state. */
+.spill-mobile-video-container .media-skin [class*="not-data-visible:hidden"] {
+  display: none !important;
+}
+
+.spill-mobile-video-container .media-skin {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  border-radius: inherit;
+  background: #000000 !important;
+}
+
+.spill-mobile-video-container video {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  border-radius: inherit;
+}
+
+/* Completely suppress all internal Video.js overlay controls inside mobile video card */
+.spill-mobile-video-container .media-skin [class*="group/controls"],
+.spill-mobile-video-container .media-skin [class*="controls"],
+.spill-mobile-video-container .media-skin [class*="Controls"],
+.spill-mobile-video-container .media-skin [class*="key-strip"],
+.spill-mobile-video-container .media-skin [class*="first-visit"],
+.spill-mobile-video-container .media-skin [class*="dock"] {
+  display: none !important;
+  pointer-events: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+}
+
+/* 1080p Badge inside mobile video */
+.spill-mobile-video-badge {
+  position: absolute;
+  top: 0.625rem;
+  left: 0.625rem;
+  z-index: 10;
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.55rem;
+  border-radius: 9999px;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #FFFFFF;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.6875rem;
+  font-weight: 600;
+}
+
+/* Title & Subtitle */
+.spill-mobile-info-header {
+  margin-top: 0.2rem;
+  padding: 0 0.25rem;
+  flex-shrink: 0;
+}
+
+.spill-mobile-title {
+  font-size: 1.45rem;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  color: #FFFFFF;
+  line-height: 1.1;
+}
+
+.spill-mobile-subtitle {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.65rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.65);
+  margin-top: 0.25rem;
+}
+
+/* Scrubber time chip */
+.spill-mobile-time-chip {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.15rem 0.55rem;
+  border-radius: 5px;
+  background: #FF5C8A;
+  color: #0E0A12;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  box-shadow: 0 2px 10px rgba(255, 92, 138, 0.6);
+  white-space: nowrap;
+}
+
+/* Mobile seek bar wrapper */
+.spill-mobile-seek-wrapper {
+  position: relative;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 0 0.125rem;
+  margin-top: 0.25rem;
+  flex-shrink: 0;
+}
+
+.spill-mobile-time-chip-track {
+  position: relative;
+  width: 100%;
+  height: 1.25rem;
+}
+
+.spill-mobile-color-bar {
+  width: 100%;
+  height: 1.5rem;
+  border-radius: 0.5rem;
+  overflow: hidden;
+  display: flex;
+  position: relative;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.spill-mobile-playhead-line {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 3.5px;
+  border-radius: 2px;
+  background: #FFFFFF;
+  box-shadow: 0 0 10px 2px rgba(255, 99, 146, 0.9), 0 0 3px #FFFFFF;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.spill-mobile-seek-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  margin-top: 0.2rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.65rem;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+/* Mobile primary controls (Prev, Big Pink Pause, Next) */
+.spill-mobile-controls-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.25rem;
+  margin: 0.35rem 0;
+  flex-shrink: 0;
+}
+
+.spill-mobile-icon-btn {
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.15s ease, background-color 0.15s ease;
+}
+
+.spill-mobile-icon-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.spill-mobile-icon-btn:active {
+  transform: scale(0.92);
+}
+
+.spill-mobile-main-play-btn {
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: 50%;
+  background: #FF5C8A;
+  color: #120F16;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 0 28px rgba(255, 92, 138, 0.65);
+  transition: transform 0.15s ease, background-color 0.15s ease;
+}
+
+.spill-mobile-main-play-btn:hover {
+  background: #FF4477;
+}
+
+.spill-mobile-main-play-btn:active {
+  transform: scale(0.92);
+}
+
+/* Secondary controls (Volume, CC, 1x, Fullscreen) */
+.spill-mobile-secondary-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  width: 100%;
+  padding: 0 0.5rem;
+  margin-top: 0.15rem;
+  flex-shrink: 0;
+}
+
+.spill-mobile-sec-btn {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.spill-mobile-sec-btn:active {
+  transform: scale(0.92);
+}
+
+.spill-sec-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+/* Compact chrome on short phones so nothing is ever clipped off-screen.
+   Kept after the base rules so it actually wins the cascade. */
+@media (max-width: 767px) and (max-height: 700px) {
+  .spill-mobile-title {
+    font-size: 1.2rem;
+  }
+
+  .spill-mobile-controls-row {
+    margin: 0.15rem 0;
+    gap: 1rem;
+  }
+
+  .spill-mobile-main-play-btn {
+    width: 3rem;
+    height: 3rem;
+  }
+
+  .spill-mobile-icon-btn {
+    width: 2.4rem;
+    height: 2.4rem;
+  }
+
+  .spill-mobile-sec-btn {
+    width: 2.25rem;
+    height: 2.25rem;
+  }
+
+  .spill-mobile-color-bar {
+    height: 1.25rem;
+  }
+
+  .spill-mobile-time-chip-track {
+    height: 1.1rem;
+  }
+
+  .spill-mobile-seek-meta {
+    margin-top: 0.15rem;
+    font-size: 0.6rem;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────
+   CINEMATIC DISSOLVE OVERLAY (Max 1s dissolve animation into darkness)
+   ───────────────────────────────────────────────────────────── */
+
+.spill-dissolve-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: #0C0A10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  animation: spillDissolveIn 0.85s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes spillDissolveIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.spill-dissolve-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.spill-dissolve-spinner {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  border: 2.5px solid rgba(255, 92, 138, 0.2);
+  border-top-color: #FF5C8A;
+  animation: spillSpin 0.75s linear infinite;
+  box-shadow: 0 0 20px rgba(255, 92, 138, 0.4);
+}
+
+@keyframes spillSpin {
+  to { transform: rotate(360deg); }
+}
+
+/* Hidden preload container — video mounts during dissolve */
+.spill-preload-video {
+  position: fixed;
+  top: -9999px;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+}
+
+/* ── Modal Dialogs ── */
+.spill-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(10px);
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  animation: spillFadeIn 0.2s ease-out;
+}
+
+@keyframes spillFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.spill-modal-box {
+  background: #16121D;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 1.25rem;
+  width: 100%;
+  max-width: 520px;
+  padding: 2rem;
+  color: #FFFFFF;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+  position: relative;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.spill-modal-close-btn {
+  position: absolute;
+  top: 1.25rem;
+  right: 1.25rem;
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  color: #FFFFFF;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.15s ease;
+}
+
+.spill-modal-close-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* ─────────────────────────────────────────────────────────────
+   MOBILE PLAYER SETTINGS SHEET
+   Bottom sheet: speed, ambient light, captions, loop.
+   Sits above the cinema chrome and respects the safe area.
+   ───────────────────────────────────────────────────────────── */
+
+.spill-settings-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 0;
+  background: rgba(3, 2, 6, 0.62);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  animation: spillFadeIn 0.2s ease-out;
+}
+
+.spill-settings-sheet {
+  width: 100%;
+  max-width: 460px;
+  max-height: min(82vh, 640px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  padding: 0.5rem 1.15rem calc(1.15rem + env(safe-area-inset-bottom));
+  border-radius: 1.5rem 1.5rem 0 0;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: none;
+  background:
+    radial-gradient(
+      120% 80% at 50% 0%,
+      color-mix(in oklab, var(--spill-key, #ff5c8a) 10%, transparent) 0%,
+      transparent 62%
+    ),
+    #0f0c14;
+  color: #ffffff;
+  box-shadow: 0 -20px 60px rgba(0, 0, 0, 0.7);
+  animation: spillSheetUp 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes spillSheetUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+.spill-settings-handle {
+  width: 2.5rem;
+  height: 0.25rem;
+  margin: 0.25rem auto 0.65rem;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.28);
+}
+
+.spill-settings-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.85rem;
+}
+
+.spill-settings-eyebrow {
+  display: block;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.6rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: color-mix(in oklab, var(--spill-key, #ff5c8a) 65%, #ffffff);
+}
+
+.spill-settings-title {
+  margin: 0.1rem 0 0;
+  font-size: 1.5rem;
+  font-weight: 500;
+  line-height: 1.15;
+}
+
+.spill-settings-close {
+  width: 2.25rem;
+  height: 2.25rem;
+  flex-shrink: 0;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.spill-settings-close svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.spill-settings-close:hover {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.spill-settings-section {
+  padding: 0.85rem 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.spill-settings-section:first-of-type {
+  border-top: none;
+  padding-top: 0.25rem;
+}
+
+.spill-settings-label {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.86);
+  margin-bottom: 0.6rem;
+}
+
+.spill-settings-value {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.72rem;
+  color: color-mix(in oklab, var(--spill-key, #ff5c8a) 72%, #ffffff);
+}
+
+.spill-settings-pills {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.spill-settings-pill {
+  flex: 1 1 0;
+  min-width: 3rem;
+  padding: 0.5rem 0.35rem;
+  border-radius: 0.7rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.82);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.spill-settings-pill:hover {
+  background: rgba(255, 255, 255, 0.13);
+}
+
+.spill-settings-pill.is-active {
+  background: color-mix(in oklab, var(--spill-key, #ff5c8a) 78%, #ffffff);
+  border-color: transparent;
+  color: #140f18;
+  box-shadow: 0 0 18px color-mix(in oklab, var(--spill-key, #ff5c8a) 45%, transparent);
+}
+
+.spill-settings-segmented {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.3rem;
+  padding: 0.25rem;
+  border-radius: 0.8rem;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.spill-settings-segment {
+  padding: 0.5rem 0.3rem;
+  border-radius: 0.6rem;
+  border: none;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.66);
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.spill-settings-segment:hover {
+  color: #ffffff;
+}
+
+.spill-settings-segment.is-active {
+  background: rgba(255, 255, 255, 0.14);
+  color: #ffffff;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+}
+
+.spill-settings-hint {
+  margin: 0.55rem 0 0;
+  font-size: 0.68rem;
+  line-height: 1.4;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.spill-settings-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding-bottom: calc(0.4rem + env(safe-area-inset-bottom));
+}
+
+.spill-settings-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0.7rem 0.15rem;
+  border: none;
+  border-radius: 0.6rem;
+  background: transparent;
+  color: #ffffff;
+  font-size: 0.82rem;
+  cursor: pointer;
+  transition: background-color 0.15s ease, opacity 0.15s ease;
+}
+
+.spill-settings-row:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.spill-settings-row:disabled {
+  opacity: 0.42;
+  cursor: not-allowed;
+}
+
+.spill-settings-row-value {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.72rem;
+  color: color-mix(in oklab, var(--spill-key, #ff5c8a) 70%, #ffffff);
+}
+
+.spill-settings-pill:focus-visible,
+.spill-settings-segment:focus-visible,
+.spill-settings-row:focus-visible,
+.spill-settings-close:focus-visible {
+  outline: 2px solid color-mix(in oklab, var(--spill-key, #ff5c8a) 80%, #ffffff);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spill-settings-backdrop,
+  .spill-settings-sheet {
+    animation: none !important;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────
+   COLLECTION BROWSER
+   Bottom sheet on mobile, two-column modal on desktop.
+   ───────────────────────────────────────────────────────────── */
+
+.spill-collection-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background: rgba(3, 2, 6, 0.7);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  animation: spillFadeIn 0.2s ease-out;
+}
+
+.spill-collection-panel {
+  width: 100%;
+  max-width: 540px;
+  max-height: min(88svh, 800px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  padding: 0.5rem 1rem calc(1.1rem + env(safe-area-inset-bottom));
+  border-radius: 1.5rem 1.5rem 0 0;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: none;
+  background:
+    radial-gradient(120% 70% at 50% 0%, rgba(255, 92, 138, 0.12) 0%, transparent 62%),
+    #0f0c14;
+  color: #ffffff;
+  box-shadow: 0 -24px 70px rgba(0, 0, 0, 0.75);
+  animation: spillSheetUp 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.spill-collection-handle {
+  width: 2.5rem;
+  height: 0.25rem;
+  margin: 0.25rem auto 0.7rem;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.28);
+}
+
+.spill-collection-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.9rem;
+}
+
+.spill-collection-eyebrow {
+  display: block;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.6rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(255, 146, 177, 0.9);
+}
+
+.spill-collection-title {
+  margin: 0.15rem 0 0;
+  font-size: 1.5rem;
+  font-weight: 500;
+  line-height: 1.15;
+}
+
+.spill-collection-subtitle {
+  margin: 0.25rem 0 0;
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.52);
+}
+
+.spill-collection-close {
+  width: 2.25rem;
+  height: 2.25rem;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.06);
+  color: #ffffff;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.spill-collection-close svg {
+  width: 1.05rem;
+  height: 1.05rem;
+}
+
+.spill-collection-close:hover {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.spill-collection-add {
+  margin: 0 0 0.9rem;
+  padding: 0.7rem 0.75rem 0.65rem;
+  border-radius: 0.9rem;
+  border: 1px dashed rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.spill-collection-add-label {
+  display: block;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.58rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.58);
+}
+
+.spill-collection-add-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-top: 0.45rem;
+}
+
+.spill-collection-input {
+  width: 100%;
+  min-height: 2.35rem;
+  padding: 0.45rem 0.6rem;
+  border-radius: 0.55rem;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(0, 0, 0, 0.35);
+  color: #ffffff;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  line-height: 1.4;
+}
+
+.spill-collection-input::placeholder {
+  color: rgba(255, 255, 255, 0.38);
+}
+
+.spill-collection-input:focus-visible {
+  outline: 2px solid rgba(255, 92, 138, 0.9);
+  outline-offset: 1px;
+  border-color: transparent;
+}
+
+.spill-collection-input[aria-invalid='true'] {
+  border-color: rgba(255, 92, 138, 0.8);
+}
+
+.spill-collection-add-btn {
+  min-height: 2.35rem;
+  padding: 0.45rem 1rem;
+  border-radius: 9999px;
+  border: 0;
+  background: #ff5c8a;
+  color: #120f16;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.64rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.spill-collection-add-btn:hover {
+  background: #ff7ba0;
+}
+
+.spill-collection-add-btn:focus-visible {
+  outline: 2px solid #ffffff;
+  outline-offset: 2px;
+}
+
+.spill-collection-add-hint,
+.spill-collection-add-error {
+  margin: 0.4rem 0 0;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.58rem;
+  line-height: 1.45;
+}
+
+.spill-collection-add-hint {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.spill-collection-add-error {
+  color: #ff92b1;
+}
+
+.spill-collection-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+
+.spill-collection-card {
+  position: relative;
+  width: 100%;
+  border-radius: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.04);
+  color: #ffffff;
+  transition: border-color 0.2s ease, background-color 0.2s ease, transform 0.15s ease;
+}
+
+.spill-collection-select {
+  display: grid;
+  grid-template-columns: 7.25rem minmax(0, 1fr);
+  align-items: start;
+  gap: 0.8rem;
+  width: 100%;
+  padding: 0.65rem;
+  border: 0;
+  border-radius: inherit;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.spill-collection-card:hover {
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(255, 255, 255, 0.22);
+}
+
+.spill-collection-card:active {
+  transform: scale(0.992);
+}
+
+.spill-collection-card.is-active {
+  border-color: rgba(255, 92, 138, 0.7);
+  background: rgba(255, 92, 138, 0.09);
+  box-shadow:
+    0 0 0 1px rgba(255, 92, 138, 0.35),
+    0 10px 30px rgba(255, 92, 138, 0.14);
+}
+
+.spill-collection-select:focus-visible {
+  outline: 2px solid rgba(255, 92, 138, 0.9);
+  outline-offset: 2px;
+}
+
+.spill-collection-card.is-custom .spill-collection-card-head {
+  padding-right: 1.7rem;
+}
+
+.spill-collection-remove {
+  position: absolute;
+  top: 0.45rem;
+  right: 0.45rem;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.6rem;
+  height: 1.6rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(12, 9, 17, 0.82);
+  color: rgba(255, 255, 255, 0.8);
+  cursor: pointer;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  transition: background-color 0.15s ease, color 0.15s ease, transform 0.15s ease;
+}
+
+.spill-collection-remove svg {
+  width: 0.7rem;
+  height: 0.7rem;
+}
+
+.spill-collection-remove:hover {
+  background: #ff5c8a;
+  color: #120f16;
+  transform: scale(1.06);
+}
+
+.spill-collection-remove:focus-visible {
+  outline: 2px solid rgba(255, 92, 138, 0.9);
+  outline-offset: 2px;
+}
+
+.spill-collection-thumb {
+  position: relative;
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  border-radius: 0.65rem;
+  background-color: #211a2b;
+  background-position: center;
+  background-size: cover;
+  overflow: hidden;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+
+.spill-collection-thumb::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(6, 4, 10, 0.05) 0%, rgba(6, 4, 10, 0.55) 100%);
+}
+
+.spill-collection-thumb-index {
+  position: absolute;
+  top: 0.35rem;
+  left: 0.4rem;
+  z-index: 1;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.6rem;
+  color: rgba(255, 255, 255, 0.85);
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
+}
+
+.spill-collection-now {
+  position: absolute;
+  left: 0.4rem;
+  bottom: 0.35rem;
+  z-index: 1;
+  padding: 0.1rem 0.4rem;
+  border-radius: 9999px;
+  background: #ff5c8a;
+  color: #120f16;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.54rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.spill-collection-body {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 0.28rem;
+  padding-top: 0.1rem;
+}
+
+.spill-collection-card-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.6rem;
+  min-width: 0;
+}
+
+.spill-collection-card-title {
+  font-size: 1rem;
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+.spill-collection-card-duration {
+  flex-shrink: 0;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.65rem;
+  color: rgba(255, 255, 255, 0.48);
+}
+
+.spill-collection-id-label {
+  margin-top: 0.2rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.54rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.42);
+}
+
+.spill-collection-id {
+  display: block;
+  max-width: 100%;
+  padding: 0.32rem 0.42rem;
+  border-radius: 0.45rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.78);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.6rem;
+  line-height: 1.45;
+  letter-spacing: 0;
+  word-break: break-all;
+  user-select: all;
+}
+
+.spill-collection-card-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-top: 0.3rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #ff92b1;
+}
+
+.spill-collection-footnote {
+  margin: 0.85rem 0 0;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.6rem;
+  color: rgba(255, 255, 255, 0.4);
+  text-align: center;
+}
+
+.spill-collection-close:focus-visible {
+  outline: 2px solid rgba(255, 92, 138, 0.9);
+  outline-offset: 2px;
+}
+
+@media (min-width: 768px) {
+  .spill-collection-backdrop {
+    align-items: center;
+    padding: 2rem;
+  }
+
+  .spill-collection-panel {
+    max-width: 800px;
+    max-height: min(86vh, 800px);
+    padding: 1.4rem 1.5rem 1.5rem;
+    border-radius: 1.5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 30px 90px rgba(0, 0, 0, 0.7);
+  }
+
+  .spill-collection-handle {
+    display: none;
+  }
+
+  .spill-collection-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+  }
+
+  .spill-collection-select {
+    grid-template-columns: 6.25rem minmax(0, 1fr);
+  }
+
+  .spill-collection-add-fields {
+    display: grid;
+    grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr) auto;
+    align-items: center;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spill-collection-backdrop,
+  .spill-collection-panel {
+    animation: none !important;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────
+   LANDING — MUX SOURCE LIBRARY
+   ───────────────────────────────────────────────────────────── */
+
+.spill-library {
+  margin-top: 5rem;
+  padding-top: 2.5rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+
+.spill-library-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  margin-bottom: 1.75rem;
+}
+
+.spill-library-eyebrow {
+  margin-bottom: 0.4rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.68rem;
+  letter-spacing: 0.18em;
+  color: var(--spill-text-muted);
+}
+
+.spill-library-title {
+  margin: 0;
+  font-size: clamp(1.6rem, 3vw, 2.1rem);
+  font-weight: 500;
+  color: var(--spill-text-dark);
+}
+
+.spill-library-intro {
+  margin: 0;
+  max-width: 36rem;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: var(--spill-text-muted);
+}
+
+.spill-library-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.25rem;
+}
+
+.spill-library-card {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: 1rem;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  background: var(--spill-cream-card);
+  box-shadow: 0 12px 30px rgba(22, 20, 24, 0.06);
+}
+
+.spill-library-thumb {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  background: #d9d1c4;
+}
+
+.spill-library-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  padding: 1rem 1.1rem 1.2rem;
+}
+
+.spill-library-card-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.spill-library-card-title {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 500;
+  color: var(--spill-text-dark);
+}
+
+.spill-library-duration {
+  flex-shrink: 0;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  color: var(--spill-text-muted);
+}
+
+.spill-library-id-label {
+  margin-bottom: 0.3rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.58rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--spill-text-muted);
+}
+
+.spill-library-id {
+  display: block;
+  padding: 0.5rem 0.6rem;
+  border-radius: 0.5rem;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  background: rgba(12, 10, 16, 0.05);
+  color: #3b3340;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.68rem;
+  line-height: 1.5;
+  word-break: break-all;
+  user-select: all;
+}
+
+.spill-library-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-top: 0.15rem;
+}
+
+.spill-library-play {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 9999px;
+  background: #ff5c8a;
+  color: #120f16;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.15s ease;
+}
+
+.spill-library-play:hover {
+  background: #ff4477;
+  transform: translateY(-1px);
+}
+
+.spill-library-play:active {
+  transform: translateY(0);
+}
+
+.spill-library-hls {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  color: var(--spill-light-pink);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+}
+
+.spill-library-hls:hover {
+  border-bottom-color: currentColor;
+}
+
+.spill-library-play:focus-visible,
+.spill-library-hls:focus-visible {
+  outline: 2px solid var(--spill-light-pink);
+  outline-offset: 2px;
+}
+
+@media (min-width: 768px) {
+  .spill-library-header {
+    flex-direction: row;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 3rem;
+  }
+
+  .spill-library-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.5rem;
+  }
+}
+

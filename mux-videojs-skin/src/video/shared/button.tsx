@@ -8,9 +8,9 @@ export function Button({ className, ...props }: ButtonProps) {
   return (
     <button
       className={cn(
-        'relative grid size-11 shrink-0 cursor-pointer place-items-center rounded-none bg-media-background p-0 text-inherit',
-        "pointer-coarse:before:absolute pointer-coarse:before:-inset-[3px] pointer-coarse:before:content-['']",
-        'hover:bg-(--media-button-highlight) focus-visible:bg-(--media-button-highlight) aria-expanded:bg-(--media-button-highlight)',
+        'relative grid size-10 shrink-0 cursor-pointer place-items-center rounded-full bg-transparent p-0 text-inherit transition-all duration-150',
+        "pointer-coarse:before:absolute pointer-coarse:before:-inset-[6px] pointer-coarse:before:content-['']",
+        'hover:bg-white/15 hover:scale-105 active:scale-95 focus-visible:bg-white/20 aria-expanded:bg-white/20',
         'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-media-ring',
         'outline-none aria-disabled:cursor-not-allowed aria-disabled:opacity-40 disabled:cursor-not-allowed disabled:opacity-40',
         'media-high-contrast:hover:bg-media-foreground media-high-contrast:hover:text-media-background media-high-contrast:focus-visible:bg-media-foreground media-high-contrast:focus-visible:text-media-background',
