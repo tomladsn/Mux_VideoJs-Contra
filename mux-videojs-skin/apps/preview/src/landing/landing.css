@@ -96,6 +96,15 @@ body:has(a:hover, button:hover, [role="button"]:hover) .spill-cursor-dot {
   transform: translate(-50%, -50%) scale(1.4);
 }
 
+/* Touch devices keep their native cursor: the glowing dot/ring is a
+   desktop-only flourish, never rendered on a phone. */
+@media (hover: none), (pointer: coarse) {
+  .spill-cursor-dot,
+  .spill-cursor-ring {
+    display: none !important;
+  }
+}
+
 /* ── Container shell ── */
 .spill-app-root {
   min-height: 100vh;
@@ -127,6 +136,25 @@ body:has(a:hover, button:hover, [role="button"]:hover) .spill-cursor-dot {
 
 .spill-app-root[data-cinema="true"] .spill-ambient-backdrop {
   opacity: 1;
+  /* A soft wash of the film's own colours across the whole room (the stronger
+     phone version below replaces it with a fuller, edge-to-edge spill). */
+  background:
+    radial-gradient(
+      90% 55% at 50% -4%,
+      color-mix(in oklab, var(--spill-key, #ff5c8a) 24%, transparent) 0%,
+      transparent 66%
+    ),
+    radial-gradient(
+      70% 50% at 4% 104%,
+      color-mix(in oklab, var(--spill-fill, #7c3aed) 20%, transparent) 0%,
+      transparent 72%
+    ),
+    radial-gradient(
+      70% 50% at 98% 92%,
+      color-mix(in oklab, var(--spill-key, #ff5c8a) 16%, transparent) 0%,
+      transparent 70%
+    );
+  transition: background 0.9s linear, opacity 0.8s ease-in-out;
 }
 
 /* Orbs removed — static coloured blobs fight the video instead of letting it illuminate the room.
@@ -555,17 +583,34 @@ body:has(a:hover, button:hover, [role="button"]:hover) .spill-cursor-dot {
     display: flex !important;
   }
 
-  /* Keep mobile cinema locked to viewport height with no scroll */
+  /* Keep mobile cinema locked to the *visible* viewport height with no scroll.
+     The base rule sets min-height: 100vh, which on phones with a browser toolbar
+     is taller than 100svh/100dvh and used to win over max-height — that was the
+     source of the page overflow. Reset min-height explicitly and track dvh so
+     the skin always fills exactly the screen. */
   .spill-app-root[data-cinema="true"] {
     height: 100svh;
+    height: 100dvh;
+    min-height: 100svh;
+    min-height: 100dvh;
     max-height: 100svh;
+    max-height: 100dvh;
     overflow: hidden;
+    overscroll-behavior: none;
+  }
+
+  html:has(.spill-app-root[data-cinema="true"]),
+  body:has(.spill-app-root[data-cinema="true"]) {
+    height: 100%;
+    overflow: hidden;
+    overscroll-behavior: none;
   }
 
   .spill-app-root[data-cinema="true"] .spill-main-container {
     padding: 0.25rem 0.85rem 0.5rem;
     overflow: hidden;
     flex: 1;
+    min-height: 0;
     display: flex;
     flex-direction: column;
   }
@@ -704,28 +749,36 @@ body:has(a:hover, button:hover, [role="button"]:hover) .spill-cursor-dot {
    video, the way an HDR TV bleeds into a dark wall. */
 @media (max-width: 767px) {
   /* Static fallback first: older engines that drop color-mix still get spill. */
+  /* One continuous wash of the film's live key + fill colours. It starts at the
+     very top of the viewport, so the navbar, the stage and the chrome all sit
+     inside the same light instead of on separate opaque bands. */
   .spill-app-root[data-cinema="true"] .spill-ambient-backdrop {
     background:
-      radial-gradient(120% 75% at 50% 2%, rgba(255, 92, 138, 0.32) 0%, rgba(255, 92, 138, 0) 62%),
-      radial-gradient(95% 65% at 6% 100%, rgba(124, 58, 237, 0.28) 0%, rgba(124, 58, 237, 0) 70%),
-      radial-gradient(95% 65% at 94% 94%, rgba(255, 92, 138, 0.24) 0%, rgba(255, 92, 138, 0) 68%);
+      radial-gradient(125% 80% at 50% -4%, rgba(255, 92, 138, 0.42) 0%, rgba(255, 92, 138, 0) 64%),
+      radial-gradient(100% 70% at 2% 100%, rgba(124, 58, 237, 0.36) 0%, rgba(124, 58, 237, 0) 72%),
+      radial-gradient(100% 70% at 98% 92%, rgba(255, 92, 138, 0.32) 0%, rgba(255, 92, 138, 0) 70%);
     background:
       radial-gradient(
-        120% 75% at 50% 2%,
-        color-mix(in oklab, var(--spill-key, #ff5c8a) 30%, transparent) 0%,
-        transparent 62%
+        125% 80% at 50% -4%,
+        color-mix(in oklab, var(--spill-key, #ff5c8a) 42%, transparent) 0%,
+        transparent 64%
       ),
       radial-gradient(
-        95% 65% at 6% 100%,
-        color-mix(in oklab, var(--spill-fill, #7c3aed) 26%, transparent) 0%,
+        100% 70% at 2% 100%,
+        color-mix(in oklab, var(--spill-fill, #7c3aed) 36%, transparent) 0%,
+        transparent 72%
+      ),
+      radial-gradient(
+        100% 70% at 98% 92%,
+        color-mix(in oklab, var(--spill-key, #ff5c8a) 32%, transparent) 0%,
         transparent 70%
       ),
       radial-gradient(
-        95% 65% at 94% 94%,
-        color-mix(in oklab, var(--spill-key, #ff5c8a) 22%, transparent) 0%,
-        transparent 68%
+        85% 60% at 50% 60%,
+        var(--film-ambient-glow, rgba(255, 92, 138, 0.18)) 0%,
+        transparent 74%
       );
-    filter: blur(10px);
+    filter: blur(8px);
     opacity: 1;
     transition: background 0.9s linear;
   }
@@ -860,26 +913,59 @@ body:has(a:hover, button:hover, [role="button"]:hover) .spill-cursor-dot {
 }
 
 /* ── Mobile-only dark room ──
-   Near-black canvas so the picture is the only light source; the stage glow
-   above carries the film colour instead of a fixed pink wash. */
+   The page is one continuous room lit by the film. There is no opaque bar or
+   card: the root itself carries the live spill wash, so the navbar and the
+   stage are tinted by the same light as the picture. */
 @media (max-width: 767px) {
   .spill-app-root[data-cinema="true"] {
-    background-color: #060409;
+    background-color: #07050b;
+    background-image:
+      radial-gradient(
+        120% 75% at 50% -8%,
+        var(--film-ambient-glow, rgba(255, 92, 138, 0.22)) 0%,
+        transparent 66%
+      ),
+      radial-gradient(
+        110% 80% at 100% 108%,
+        color-mix(in oklab, var(--spill-fill, #7c3aed) 22%, transparent) 0%,
+        transparent 72%
+      );
+    background-attachment: fixed;
+    transition: background-color 0.65s cubic-bezier(0.16, 1, 0.3, 1);
   }
 
   body:has(.spill-app-root[data-cinema="true"]) {
-    background-color: #060409;
+    background-color: #07050b;
   }
 
-  /* The top nav belongs to the chrome, so it fades with the panels. */
+  /* The top nav belongs to the chrome, so it fades with the panels. It has no
+     background of its own — the room's spill runs straight through it. */
   .spill-app-root[data-cinema="true"] .spill-nav {
     max-height: 90px;
     overflow: hidden;
+    background: transparent;
+    border: none;
     transition:
       opacity 0.3s ease,
       transform 0.34s cubic-bezier(0.16, 1, 0.3, 1),
       max-height 0.34s cubic-bezier(0.16, 1, 0.3, 1),
       padding 0.34s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  /* Ghost action: no pill, no border, no blur — the spill shows through. */
+  .spill-app-root[data-cinema="true"] .spill-lights-up-btn {
+    background: transparent;
+    border-color: transparent;
+    backdrop-filter: none;
+    box-shadow: none;
+    text-shadow: 0 1px 14px rgba(0, 0, 0, 0.7);
+  }
+
+  .spill-app-root[data-cinema="true"] .spill-lights-up-btn:hover,
+  .spill-app-root[data-cinema="true"] .spill-lights-up-btn:active {
+    background: transparent;
+    border-color: transparent;
+    transform: none;
   }
 
   .spill-app-root[data-cinema="true"][data-mobile-ui="false"] .spill-nav {
@@ -903,20 +989,18 @@ body:has(a:hover, button:hover, [role="button"]:hover) .spill-cursor-dot {
   width: 100%;
   aspect-ratio: 16 / 9;
   max-height: min(48vh, 100%);
-  border-radius: 1.125rem;
+  border-radius: 1rem;
   overflow: hidden;
-  /* The frame emits the film's live key/fill colour into the dark room.
-     Static fallback first, then the live colours when color-mix is supported. */
+  /* No frame, no black halo: the picture simply sits in the room and lets its
+     own key/fill colour bleed outwards. */
   box-shadow:
-    0 0 46px 8px rgba(255, 92, 138, 0.45),
-    0 0 120px 28px rgba(124, 58, 237, 0.3),
-    0 22px 60px rgba(0, 0, 0, 0.78);
+    0 0 52px 6px rgba(255, 92, 138, 0.5),
+    0 0 140px 30px rgba(124, 58, 237, 0.34);
   box-shadow:
-    0 0 46px 8px color-mix(in oklab, var(--spill-key, #ff5c8a) 46%, transparent),
-    0 0 120px 28px color-mix(in oklab, var(--spill-fill, #7c3aed) 30%, transparent),
-    0 22px 60px rgba(0, 0, 0, 0.78);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: #000000;
+    0 0 52px 6px color-mix(in oklab, var(--spill-key, #ff5c8a) 50%, transparent),
+    0 0 140px 30px color-mix(in oklab, var(--spill-fill, #7c3aed) 34%, transparent);
+  border: 0;
+  background: transparent;
   flex-shrink: 0;
   transition:
     aspect-ratio 0.3s ease,
@@ -932,9 +1016,8 @@ body:has(a:hover, button:hover, [role="button"]:hover) .spill-cursor-dot {
   max-width: 64%;
 }
 
-/* Make inner VideoPlayer edge-to-edge — badge span is excluded so it stays
-   as a small chip, not a full-screen overlay */
-.spill-mobile-video-container > *:not(.spill-mobile-video-badge) {
+/* Make the inner VideoPlayer edge-to-edge inside its frame. */
+.spill-mobile-video-container > * {
   position: absolute !important;
   inset: 0 !important;
   width: 100% !important;
@@ -955,7 +1038,7 @@ body:has(a:hover, button:hover, [role="button"]:hover) .spill-cursor-dot {
   width: 100% !important;
   height: 100% !important;
   border-radius: inherit;
-  background: #000000 !important;
+  background: transparent !important;
 }
 
 .spill-mobile-video-container video {
@@ -978,25 +1061,6 @@ body:has(a:hover, button:hover, [role="button"]:hover) .spill-cursor-dot {
   pointer-events: none !important;
   opacity: 0 !important;
   visibility: hidden !important;
-}
-
-/* 1080p Badge inside mobile video */
-.spill-mobile-video-badge {
-  position: absolute;
-  top: 0.625rem;
-  left: 0.625rem;
-  z-index: 10;
-  display: inline-flex;
-  align-items: center;
-  padding: 0.2rem 0.55rem;
-  border-radius: 9999px;
-  background: rgba(0, 0, 0, 0.7);
-  backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  color: #FFFFFF;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 0.6875rem;
-  font-weight: 600;
 }
 
 /* Title & Subtitle */
@@ -1059,6 +1123,12 @@ body:has(a:hover, button:hover, [role="button"]:hover) .spill-cursor-dot {
   height: 1.25rem;
 }
 
+/* Wrap keeps the visual reel and the larger touch hit-area together. */
+.spill-mobile-seek-bar-wrap {
+  position: relative;
+  width: 100%;
+}
+
 .spill-mobile-color-bar {
   width: 100%;
   height: 1.5rem;
@@ -1068,6 +1138,28 @@ body:has(a:hover, button:hover, [role="button"]:hover) .spill-cursor-dot {
   position: relative;
   cursor: pointer;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+/* 44px-high invisible hit-area: dragging anywhere around the reel scrubs. */
+.spill-mobile-seek-hit {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 2.75rem;
+  transform: translateY(-50%);
+  z-index: 3;
+  touch-action: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  border-radius: 0.75rem;
+  outline: none;
+}
+
+.spill-mobile-seek-hit:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.9);
+  outline-offset: 4px;
+  box-shadow: 0 0 0 6px rgba(255, 92, 138, 0.25);
 }
 
 .spill-mobile-playhead-line {
@@ -1103,22 +1195,25 @@ body:has(a:hover, button:hover, [role="button"]:hover) .spill-cursor-dot {
   flex-shrink: 0;
 }
 
+/* Buttons sit directly on the room's light: no discs, no borders, no blur.
+   Only the pink transport button stays a solid object. */
 .spill-mobile-icon-btn {
   width: 2.75rem;
   height: 2.75rem;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: transparent;
+  border: 0;
   color: #FFFFFF;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: transform 0.15s ease, background-color 0.15s ease;
+  filter: drop-shadow(0 2px 10px rgba(0, 0, 0, 0.55));
+  transition: transform 0.15s ease, opacity 0.15s ease;
 }
 
 .spill-mobile-icon-btn:hover {
-  background: rgba(255, 255, 255, 0.15);
+  opacity: 0.75;
 }
 
 .spill-mobile-icon-btn:active {
@@ -1163,14 +1258,24 @@ body:has(a:hover, button:hover, [role="button"]:hover) .spill-cursor-dot {
   width: 2.5rem;
   height: 2.5rem;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: transparent;
+  border: 0;
   color: #FFFFFF;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.15s ease;
+  filter: drop-shadow(0 2px 10px rgba(0, 0, 0, 0.55));
+  transition: transform 0.15s ease, opacity 0.15s ease;
+}
+
+.spill-mobile-sec-btn:hover {
+  opacity: 0.75;
+}
+
+.spill-mobile-sec-btn:disabled {
+  opacity: 0.3;
+  cursor: default;
 }
 
 .spill-mobile-sec-btn:active {
@@ -1222,6 +1327,159 @@ body:has(a:hover, button:hover, [role="button"]:hover) .spill-cursor-dot {
     margin-top: 0.15rem;
     font-size: 0.6rem;
   }
+}
+
+/* ─────────────────────────────────────────────────────────────
+   MOBILE FULLSCREEN — "picture first"
+   Fullscreen never rotates or re-orients the device. It simply gives the film
+   the whole viewport: the picture is centred with a small margin so its spill
+   stays visible around the edges (letterboxed above/below in portrait, at the
+   sides in landscape), while the chrome becomes an overlay that auto-hides
+   during playback. Tapping brings it back, and the sheets portal into this
+   element so they stay interactive in both native and CSS fullscreen.
+   ───────────────────────────────────────────────────────────── */
+.spill-mobile-cinema-layout:is(:fullscreen, [data-fullscreen='true']) {
+  width: 100%;
+  max-width: none;
+  height: 100vh;
+  height: 100dvh;
+  margin: 0;
+  padding: 0;
+  gap: 0;
+  /* The room wash lives on the layout itself: in native fullscreen nothing
+     outside the top-layer element is painted, so it cannot come from the
+     backdrop behind it. */
+  background-color: #07050b;
+  background-image:
+    radial-gradient(
+      120% 80% at 50% -6%,
+      color-mix(in oklab, var(--spill-key, #ff5c8a) 40%, transparent) 0%,
+      transparent 64%
+    ),
+    radial-gradient(
+      110% 80% at 100% 108%,
+      color-mix(in oklab, var(--spill-fill, #7c3aed) 34%, transparent) 0%,
+      transparent 72%
+    ),
+    radial-gradient(
+      85% 60% at 50% 62%,
+      var(--film-ambient-glow, rgba(255, 92, 138, 0.2)) 0%,
+      transparent 74%
+    );
+}
+
+/* CSS fallback when the browser refuses element fullscreen (e.g. iPhone). */
+.spill-mobile-cinema-layout[data-fullscreen='true'] {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+}
+
+/* In pseudo-fullscreen the nav sits outside the pinned layout; hide it. */
+.spill-app-root[data-mobile-fullscreen='true'] .spill-nav {
+  display: none;
+}
+
+.spill-mobile-cinema-layout:is(:fullscreen, [data-fullscreen='true']) .spill-mobile-video-stage {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  padding:
+    max(0.75rem, 3.5vh)
+    max(0.75rem, 3.5vw)
+    max(0.75rem, 3.5vh)
+    max(0.75rem, 3.5vw);
+}
+
+.spill-mobile-cinema-layout:is(:fullscreen, [data-fullscreen='true']) .spill-mobile-video-stage::before {
+  display: none;
+}
+
+.spill-mobile-cinema-layout:is(:fullscreen, [data-fullscreen='true']) .spill-mobile-video-container,
+.spill-mobile-cinema-layout:is(:fullscreen, [data-fullscreen='true']) .spill-mobile-video-container[data-ar='portrait'] {
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  aspect-ratio: auto;
+  border: 0;
+  border-radius: 0.75rem;
+  background: transparent;
+  box-shadow: none;
+}
+
+/* `contain` keeps the whole frame, and the letterbox stays transparent so the
+   spill is visible: above/below a 16:9 film in portrait, at the sides in
+   landscape. Nothing is cropped, nothing rotates. */
+.spill-mobile-cinema-layout:is(:fullscreen, [data-fullscreen='true']) .spill-mobile-video-container video {
+  object-fit: contain !important;
+}
+
+.spill-mobile-cinema-layout:is(:fullscreen, [data-fullscreen='true']) .media-skin {
+  background: transparent !important;
+}
+
+.spill-mobile-cinema-layout:is(:fullscreen, [data-fullscreen='true']) .spill-mobile-chrome-shell {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 5;
+  padding: 2rem max(0.85rem, env(safe-area-inset-right)) max(0.5rem, env(safe-area-inset-bottom))
+    max(0.85rem, env(safe-area-inset-left));
+  background: linear-gradient(
+    to top,
+    rgba(4, 3, 8, 0.88) 0%,
+    rgba(4, 3, 8, 0.5) 55%,
+    transparent 100%
+  );
+}
+
+/* Compact rows in fullscreen so a landscape phone (about 390px tall) keeps
+   the title, seek reel and all controls above the safe-area inset. */
+.spill-mobile-cinema-layout:is(:fullscreen, [data-fullscreen='true']) .spill-mobile-info-header {
+  padding: 0;
+}
+
+.spill-mobile-cinema-layout:is(:fullscreen, [data-fullscreen='true']) .spill-mobile-title {
+  font-size: 1rem;
+}
+
+.spill-mobile-cinema-layout:is(:fullscreen, [data-fullscreen='true']) .spill-mobile-seek-wrapper {
+  margin-top: 0;
+}
+
+.spill-mobile-cinema-layout:is(:fullscreen, [data-fullscreen='true']) .spill-mobile-color-bar {
+  height: 1rem;
+}
+
+.spill-mobile-cinema-layout:is(:fullscreen, [data-fullscreen='true']) .spill-mobile-time-chip-track {
+  height: 1.05rem;
+}
+
+.spill-mobile-cinema-layout:is(:fullscreen, [data-fullscreen='true']) .spill-mobile-seek-meta {
+  margin-top: 0;
+}
+
+.spill-mobile-cinema-layout:is(:fullscreen, [data-fullscreen='true']) .spill-mobile-controls-row {
+  margin: 0.1rem 0;
+  gap: 1rem;
+}
+
+.spill-mobile-cinema-layout:is(:fullscreen, [data-fullscreen='true']) .spill-mobile-main-play-btn {
+  width: 2.75rem;
+  height: 2.75rem;
+}
+
+.spill-mobile-cinema-layout:is(:fullscreen, [data-fullscreen='true']) .spill-mobile-icon-btn {
+  width: 2.25rem;
+  height: 2.25rem;
+}
+
+.spill-mobile-cinema-layout:is(:fullscreen, [data-fullscreen='true']) .spill-mobile-sec-btn {
+  width: 2rem;
+  height: 2rem;
 }
 
 /* ─────────────────────────────────────────────────────────────
@@ -1829,6 +2087,17 @@ body:has(a:hover, button:hover, [role="button"]:hover) .spill-cursor-dot {
   box-shadow:
     0 0 0 1px rgba(255, 92, 138, 0.35),
     0 10px 30px rgba(255, 92, 138, 0.14);
+}
+
+/* Keyboard highlight from the ↑/↓ navigation (distinct from "now playing"). */
+.spill-collection-card.is-focused {
+  border-color: rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.spill-collection-card.is-focused .spill-collection-select {
+  outline: 2px solid rgba(255, 255, 255, 0.82);
+  outline-offset: 2px;
 }
 
 .spill-collection-select:focus-visible {

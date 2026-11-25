@@ -18,6 +18,8 @@ export interface MobileSettingsSheetProps {
   onCaptionsToggle: () => void;
   loop: boolean;
   onLoopToggle: () => void;
+  /** Render inside the fullscreen element so the sheet is visible in native fullscreen. */
+  portalTarget?: HTMLElement | null;
 }
 
 export function MobileSettingsSheet({
@@ -30,6 +32,7 @@ export function MobileSettingsSheet({
   onCaptionsToggle,
   loop,
   onLoopToggle,
+  portalTarget,
 }: MobileSettingsSheetProps) {
   const touchStartY = useRef<number | null>(null);
   // Quality lives in the player store, so this component is rendered inside
@@ -163,6 +166,6 @@ export function MobileSettingsSheet({
         </div>
       </div>
     </div>,
-    document.body
+    portalTarget ?? document.body
   );
 }

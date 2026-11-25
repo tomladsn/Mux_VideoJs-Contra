@@ -2,7 +2,14 @@
 
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import {
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+  type KeyboardEvent as ReactKeyboardEvent,
+  type PointerEvent as ReactPointerEvent,
+} from 'react';
 import { MuxVideo } from '@videojs/react/media/mux-video';
 import { VideoPlayer } from '@videojs/react/video';
 
@@ -167,6 +174,11 @@ export function LandingPage() {
     return index >= 0 ? index : 0;
   });
   const [isMobile, setIsMobile] = useState(false);
+  // True while a mobile cinema is in fullscreen (native or CSS fallback). It keeps
+  // the mobile layout mounted when rotating a phone to landscape, where the
+  // width-based check alone would otherwise switch to the desktop skin.
+  const [cinemaFullscreen, setCinemaFullscreen] = useState(false);
+  const [pseudoFullscreen, setPseudoFullscreen] = useState(false);
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
   const [designNotesOpen, setDesignNotesOpen] = useState(false);
   const [videoAR, setVideoAR] = useState<'landscape' | 'portrait'>('landscape');
@@ -188,6 +200,14 @@ export function LandingPage() {
   const dissolveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const cursorDotRef = useRef<HTMLDivElement | null>(null);
   const cursorRingRef = useRef<HTMLDivElement | null>(null);
+  const mobileLayoutRef = useRef<HTMLDivElement | null>(null);
+  const seekBarRef = useRef<HTMLDivElement | null>(null);
+  const scrubbingRef = useRef(false);
+  const stageVisibleOnDownRef = useRef(false);
+
+  // Fullscreen forces the mobile cinema to stay mounted across an orientation
+  // change; `isMobile` alone is width-based and would flip to desktop at 768px.
+  const mobileCinema = isMobile || cinemaFullscreen;
 
   const films: FilmItem[] = [...DEFAULT_FILMS, ...customFilms];
   const currentFilm = films[filmIndex] ?? films[0];
@@ -252,9 +272,9 @@ export function LandingPage() {
   // full whenever we enter mobile cinema (a persisted "off"/"soft" would otherwise
   // leave the room black).
   useEffect(() => {
-    if (!cinemaMode || !isMobile) return;
+    if (!cinemaMode || !mobileCinema) return;
     setGlowMode('full');
-  }, [cinemaMode, isMobile, filmIndex]);
+  }, [cinemaMode, mobileCinema, filmIndex]);
 
   // ── Switching films loads the next Mux asset ──
   // The cinema player is keyed by film, so it remounts on every next/prev.
@@ -300,6 +320,21 @@ export function LandingPage() {
     revealMobileUi();
   }, [revealMobileUi]);
 
+  // Tapping the picture toggles the chrome: a tap on a bare stage hides the
+  // chrome (when it was showing) and a tap on a hidden stage brings it back.
+  const handleStagePointerDown = useCallback(() => {
+    stageVisibleOnDownRef.current = mobileUiVisible;
+  }, [mobileUiVisible]);
+
+  const handleStageClick = useCallback(() => {
+    if (stageVisibleOnDownRef.current) {
+      setMobileUiVisible(false);
+      setMobileUiHeld(false);
+    } else {
+      revealMobileUi();
+    }
+  }, [revealMobileUi]);
+
   // A scrub or a long press keeps the chrome up until the pointer is released.
   useEffect(() => {
     if (!mobileUiHeld) return;
@@ -322,11 +357,11 @@ export function LandingPage() {
 
   useEffect(() => {
     // Pausing (or reaching the end) always brings the controls back.
-    if (cinemaMode && isMobile && !isPlaying) setMobileUiVisible(true);
-  }, [cinemaMode, isMobile, isPlaying]);
+    if (cinemaMode && mobileCinema && !isPlaying) setMobileUiVisible(true);
+  }, [cinemaMode, mobileCinema, isPlaying]);
 
   useEffect(() => {
-    if (!cinemaMode || !isMobile) {
+    if (!cinemaMode || !mobileCinema) {
       setMobileUiVisible(true);
       return;
     }
@@ -335,10 +370,14 @@ export function LandingPage() {
 
     const timer = setTimeout(() => setMobileUiVisible(false), 4000);
     return () => clearTimeout(timer);
-  }, [cinemaMode, isMobile, isPlaying, mobileUiVisible, mobileUiHeld, mobileUiNonce, filmIndex, settingsOpen, collectionOpen]);
+  }, [cinemaMode, mobileCinema, isPlaying, mobileUiVisible, mobileUiHeld, mobileUiNonce, filmIndex, settingsOpen, collectionOpen]);
 
-  // ── Custom SPILL glowing cursor ──
+  // ── Custom SPILL glowing cursor (desktop only) ──
   useEffect(() => {
+    // Touch screens keep their native pointer; don't attach a desktop mousemove
+    // listener or leave the custom cursor on a phone.
+    if (isMobile || window.matchMedia('(pointer: coarse)').matches) return;
+
     const onMouseMove = (e: MouseEvent) => {
       if (cursorDotRef.current) {
         cursorDotRef.current.style.transform = `translate3d(${e.clientX}px, ${e.clientY}px, 0) translate(-50%, -50%)`;
@@ -349,7 +388,7 @@ export function LandingPage() {
     };
     window.addEventListener('mousemove', onMouseMove);
     return () => window.removeEventListener('mousemove', onMouseMove);
-  }, []);
+  }, [isMobile]);
 
   // Hook into video element: track time, play/pause, AR detection, and buffer readiness
   useEffect(() => {
@@ -418,7 +457,7 @@ export function LandingPage() {
 
   // ── Mobile player settings: speed, loop, mute and captions ──
   useEffect(() => {
-    if (!cinemaMode || !isMobile) return;
+    if (!cinemaMode || !mobileCinema) return;
 
     const getVideo = () =>
       (document.querySelector('.spill-mobile-video-container video') as HTMLVideoElement | null) ??
@@ -450,11 +489,11 @@ export function LandingPage() {
       video?.removeEventListener('loadedmetadata', apply);
       trackList?.removeEventListener('addtrack', apply);
     };
-  }, [cinemaMode, isMobile, playbackRate, loop, muted, captionsOn, filmIndex]);
+  }, [cinemaMode, mobileCinema, playbackRate, loop, muted, captionsOn, filmIndex]);
 
   // Detect whether this film actually ships subtitle/caption tracks.
   useEffect(() => {
-    if (!cinemaMode || !isMobile) return;
+    if (!cinemaMode || !mobileCinema) return;
 
     const check = () => {
       const video =
@@ -470,7 +509,7 @@ export function LandingPage() {
     check();
     const timers = [400, 1200, 3000].map((ms) => setTimeout(check, ms));
     return () => timers.forEach(clearTimeout);
-  }, [cinemaMode, isMobile, filmIndex]);
+  }, [cinemaMode, mobileCinema, filmIndex]);
 
   // Settings always keep the chrome up.
   useEffect(() => {
@@ -533,6 +572,11 @@ export function LandingPage() {
     if (dissolveTimerRef.current) clearTimeout(dissolveTimerRef.current);
     const video = document.querySelector('.media-skin video') as HTMLVideoElement | null;
     if (video) video.pause();
+    // Leaving the cinema also leaves fullscreen; never carry the pinned layout
+    // or the fullscreen session back into the landing page.
+    if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+    setCinemaFullscreen(false);
+    setPseudoFullscreen(false);
     setIsPlaying(false);
     setPhase('idle');
     setSettingsOpen(false);
@@ -627,49 +671,174 @@ export function LandingPage() {
     [films, currentFilm.id, filmIndex]
   );
 
-  // Seek scrub
-  const handleScrub = useCallback(
-    (e: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>) => {
-      const rect = e.currentTarget.getBoundingClientRect();
-      const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+  // ── Scrub the colour reel ──
+  // Pointer events (not click) so a finger can press and drag along the reel:
+  // the playhead, time chip and video all follow the finger, and pointer
+  // capture keeps tracking even when it leaves the 44px hit strip.
+  const seekToClientX = useCallback(
+    (clientX: number) => {
+      const el = seekBarRef.current;
+      if (!el) return;
+      const rect = el.getBoundingClientRect();
+      if (rect.width <= 0) return;
       const pct = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
-      setCurrentTime(pct * filmDuration);
-      const video = document.querySelector('.media-skin video') as HTMLVideoElement | null;
-      if (video && video.duration && isFinite(video.duration)) {
+      const video =
+        (document.querySelector('.spill-mobile-video-container video') as HTMLVideoElement | null) ??
+        (document.querySelector('.media-skin video') as HTMLVideoElement | null);
+      const duration =
+        video && isFinite(video.duration) && video.duration > 0 ? video.duration : filmDuration;
+      setCurrentTime(pct * duration);
+      if (video && isFinite(video.duration) && video.duration > 0) {
         video.currentTime = pct * video.duration;
       }
     },
     [filmDuration]
   );
 
-  // Mobile fullscreen toggle with AR rotation lock
-  const handleMobileFullscreen = useCallback(async () => {
-    const container = document.querySelector('.spill-mobile-video-container') as HTMLElement | null;
-    if (!container) return;
+  const handleSeekPointerDown = useCallback(
+    (e: ReactPointerEvent<HTMLDivElement>) => {
+      if (e.pointerType === 'mouse' && e.button !== 0) return;
+      scrubbingRef.current = true;
+      beginMobileUiInteraction();
+      e.currentTarget.focus({ preventScroll: true });
+      try {
+        e.currentTarget.setPointerCapture(e.pointerId);
+      } catch {
+        // Older engines: dragging still works while the pointer stays on the bar.
+      }
+      seekToClientX(e.clientX);
+      e.preventDefault();
+    },
+    [beginMobileUiInteraction, seekToClientX]
+  );
 
-    if (document.fullscreenElement) {
-      await document.exitFullscreen().catch(() => {});
-      try {
-        // @ts-ignore
-        await screen.orientation?.unlock?.();
-      } catch (_) {}
-    } else {
-      await container.requestFullscreen().catch(() => {});
-      try {
-        const orientation = videoAR === 'portrait' ? 'portrait-primary' : 'landscape-primary';
-        // @ts-ignore
-        await screen.orientation?.lock?.(orientation);
-      } catch (_) {}
+  const handleSeekPointerMove = useCallback(
+    (e: ReactPointerEvent<HTMLDivElement>) => {
+      if (!scrubbingRef.current) return;
+      seekToClientX(e.clientX);
+    },
+    [seekToClientX]
+  );
+
+  const handleSeekPointerEnd = useCallback((e: ReactPointerEvent<HTMLDivElement>) => {
+    if (!scrubbingRef.current) return;
+    scrubbingRef.current = false;
+    if (e.currentTarget.hasPointerCapture?.(e.pointerId)) {
+      e.currentTarget.releasePointerCapture(e.pointerId);
     }
-  }, [videoAR]);
+  }, []);
+
+  const handleSeekKeyDown = useCallback(
+    (e: ReactKeyboardEvent<HTMLDivElement>) => {
+      const video =
+        (document.querySelector('.spill-mobile-video-container video') as HTMLVideoElement | null) ??
+        (document.querySelector('.media-skin video') as HTMLVideoElement | null);
+      const duration =
+        video && isFinite(video.duration) && video.duration > 0 ? video.duration : filmDuration;
+      if (duration <= 0) return;
+
+      const current =
+        video && isFinite(video.currentTime) ? video.currentTime : Math.min(currentTime, duration);
+      let next: number | null = null;
+      if (e.key === 'ArrowRight' || e.key === 'ArrowUp') next = current + 5;
+      else if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') next = current - 5;
+      else if (e.key === 'PageUp') next = current + 30;
+      else if (e.key === 'PageDown') next = current - 30;
+      else if (e.key === 'Home') next = 0;
+      else if (e.key === 'End') next = duration;
+      if (next === null) return;
+
+      e.preventDefault();
+      const clamped = Math.max(0, Math.min(duration, next));
+      setCurrentTime(clamped);
+      if (video) video.currentTime = clamped;
+      revealMobileUi();
+    },
+    [currentTime, filmDuration, revealMobileUi]
+  );
+
+  // Mobile fullscreen: the layout (picture + chrome) goes full-viewport.
+  // Nothing is rotated or locked — whatever orientation the phone is in, the
+  // film stays centred with its spill visible around it. If it is playing when
+  // fullscreen starts, the chrome gets out of the way immediately; a tap on the
+  // picture brings it back.
+  const handleMobileFullscreen = useCallback(async () => {
+    const layout = document.querySelector('.spill-mobile-cinema-layout') as HTMLElement | null;
+    if (!layout) return;
+
+    const isActive = !!document.fullscreenElement || pseudoFullscreen;
+
+    if (isActive) {
+      if (document.fullscreenElement) {
+        await document.exitFullscreen().catch(() => {});
+      }
+      setPseudoFullscreen(false);
+      setCinemaFullscreen(false);
+      revealMobileUi();
+      return;
+    }
+
+    // Keep the mobile skin mounted; `isMobile` alone would flip to the desktop
+    // skin if the viewport crosses 768px (tablet or split screen).
+    setCinemaFullscreen(true);
+
+    let enteredNative = false;
+    try {
+      // Some engines keep requestFullscreen pending (no transient activation,
+      // restricted iframe). Race it so the CSS fallback is never blocked.
+      const result = await Promise.race([
+        layout
+          .requestFullscreen({ navigationUI: 'hide' })
+          .then(() => 'ok' as const)
+          .catch(() => 'fail' as const),
+        new Promise<'timeout'>((resolve) => setTimeout(() => resolve('timeout'), 800)),
+      ]);
+      enteredNative = result === 'ok' && !!document.fullscreenElement;
+    } catch (_) {
+      enteredNative = false;
+    }
+
+    if (!enteredNative) {
+      // Fallback: the layout fills the viewport with its own chrome instead of
+      // handing the film to the native player and losing the custom UI.
+      setPseudoFullscreen(true);
+    }
+
+    // Fullscreen is for watching: leave only the picture while it plays.
+    if (isPlaying) setMobileUiVisible(false);
+  }, [isPlaying, pseudoFullscreen, revealMobileUi]);
+
+  // Sync with the browser when fullscreen is left via Escape or a system gesture.
+  useEffect(() => {
+    const onFullscreenChange = () => {
+      if (document.fullscreenElement) return;
+      setCinemaFullscreen(false);
+      setPseudoFullscreen(false);
+    };
+    document.addEventListener('fullscreenchange', onFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', onFullscreenChange);
+  }, []);
 
   // Global Hotkeys
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
       if (['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement)?.tagName)) return;
+      // The collection browser owns the keyboard while it is open, but C must
+      // still toggle it shut. Handle it first, before that early return.
+      if (e.key === 'c' || e.key === 'C') {
+        if (e.repeat) return;
+        e.preventDefault();
+        setCollectionOpen((open) => !open);
+        return;
+      }
       // The collection browser owns the keyboard while it is open, so Escape
       // dismisses the sheet instead of dropping the house lights.
       if (collectionOpen) return;
+      if (e.key === 'Escape' && (document.fullscreenElement || pseudoFullscreen)) {
+        e.preventDefault();
+        handleMobileFullscreen();
+        return;
+      }
       if (e.key === 'l' || e.key === 'L') {
         e.preventDefault();
         if (phase === 'idle') handlePlayCinema(); else handleLightsUp();
@@ -683,15 +852,15 @@ export function LandingPage() {
         e.preventDefault(); handleNextFilm();
       } else if (e.key === 'p' || e.key === 'P') {
         e.preventDefault(); handlePrevFilm();
-      } else if (e.key === 'c' || e.key === 'C') {
-        e.preventDefault(); setCollectionOpen((open) => !open);
       } else if (e.key === 'Escape' && phase !== 'idle') {
         handleLightsUp();
       }
     };
-    window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
-  }, [phase, handlePlayCinema, handleLightsUp, togglePlayPause, handleNextFilm, handlePrevFilm, collectionOpen]);
+    // Capture phase: claim the shortcut before the player's own hotkeys (e.g.
+    // C = subtitles) so one key does one thing.
+    window.addEventListener('keydown', onKeyDown, true);
+    return () => window.removeEventListener('keydown', onKeyDown, true);
+  }, [phase, handlePlayCinema, handleLightsUp, togglePlayPause, handleNextFilm, handlePrevFilm, collectionOpen, handleMobileFullscreen, pseudoFullscreen]);
 
   const progressPct = filmDuration > 0 ? (currentTime / filmDuration) * 100 : 0;
 
@@ -708,11 +877,16 @@ export function LandingPage() {
       data-phase={phase}
       data-cinema={cinemaMode ? 'true' : 'false'}
       data-mobile-ui={mobileUiVisible ? 'true' : 'false'}
+      data-mobile-fullscreen={pseudoFullscreen ? 'true' : 'false'}
       style={rootStyle}
     >
-      {/* ── Custom SPILL Cursor: luminous dot & ring ── */}
-      <div ref={cursorDotRef} className="spill-cursor-dot" aria-hidden="true" />
-      <div ref={cursorRingRef} className="spill-cursor-ring" aria-hidden="true" />
+      {/* ── Custom SPILL Cursor: luminous dot & ring (desktop only) ── */}
+      {!isMobile && (
+        <>
+          <div ref={cursorDotRef} className="spill-cursor-dot" aria-hidden="true" />
+          <div ref={cursorRingRef} className="spill-cursor-ring" aria-hidden="true" />
+        </>
+      )}
 
       {/* ── 1-Second Dissolve Overlay into darkness ── */}
       {isDissolving && (
@@ -743,7 +917,7 @@ export function LandingPage() {
 
       {/* ── Top Navigation Bar ── */}
       <header className="spill-nav">
-        {cinemaMode && isMobile ? (
+        {cinemaMode && mobileCinema ? (
           <span className="spill-logo-plain">SPILL</span>
         ) : (
           <a href="#" className="spill-logo" onClick={(e) => { e.preventDefault(); handleLightsUp(); }}>
@@ -753,11 +927,11 @@ export function LandingPage() {
         )}
 
         <div className="spill-nav-links">
-          {cinemaMode && isMobile ? (
+          {cinemaMode && mobileCinema ? (
             <button type="button" className="spill-lights-up-btn" onClick={handleLightsUp} aria-label="Lights up">
               Lights up
             </button>
-          ) : cinemaMode && !isMobile ? (
+          ) : cinemaMode && !mobileCinema ? (
             <>
               <button type="button" className="spill-lights-up-btn" onClick={handleLightsUp}>
                 <span>Lights up</span>
@@ -801,22 +975,26 @@ export function LandingPage() {
       <main className="spill-main-container">
 
         {/* ══ MOBILE CINEMA MODE (Frame 1): 100% UNBLOCK VIDEO, NO BOTTOM PROGRAMME SECTION ══ */}
-        {cinemaMode && isMobile ? (
+        {cinemaMode && mobileCinema ? (
           <div
+            ref={mobileLayoutRef}
             className="spill-mobile-cinema-layout"
             data-ui-visible={mobileUiVisible ? 'true' : 'false'}
+            data-fullscreen={pseudoFullscreen ? 'true' : 'false'}
             onPointerDown={beginMobileUiInteraction}
             onPointerUp={revealMobileUi}
             onPointerCancel={revealMobileUi}
           >
 
             {/* Stage keeps the video optically centred when the chrome is away */}
-            <div className="spill-mobile-video-stage">
+            <div
+              className="spill-mobile-video-stage"
+              onPointerDown={handleStagePointerDown}
+              onClick={handleStageClick}
+            >
               <div className="spill-mobile-video-container" data-ar={videoAR}>
-                <span className="spill-mobile-video-badge">1080p</span>
-                {/* No poster on mobile — native video poster creates a dark thumbnail "mask"
-                    over the player. Pure black bg (from .media-skin bg-black) is the correct
-                    pre-play state: dark canvas that the video illuminates when it starts. */}
+                {/* No poster and no resolution chip: the film's own light fills the
+                    frame, and the quality lives in the settings sheet. */}
                 <VideoPlayer key={currentFilm.id}>
                   <VideoSkin ambientGlow controls={false} showKeyStrip={false}>
                     <MuxVideo src={videoSrc} playsInline crossOrigin="" />
@@ -831,6 +1009,7 @@ export function LandingPage() {
                     onCaptionsToggle={() => setCaptionsOn((value) => !value)}
                     loop={loop}
                     onLoopToggle={() => setLoop((value) => !value)}
+                    portalTarget={cinemaFullscreen ? mobileLayoutRef.current : null}
                   />
                 </VideoPlayer>
               </div>
@@ -859,11 +1038,28 @@ export function LandingPage() {
                       {formatTime(currentTime)}
                     </div>
                   </div>
-                  <div className="spill-mobile-color-bar" onClick={handleScrub}>
-                    {COLOUR_REEL_PALETTE.map((color, i) => (
-                      <div key={i} className="spill-color-segment" style={{ backgroundColor: color }} />
-                    ))}
-                    <div className="spill-mobile-playhead-line" style={{ left: `${progressPct}%` }} />
+                  <div className="spill-mobile-seek-bar-wrap">
+                    <div className="spill-mobile-color-bar" ref={seekBarRef}>
+                      {COLOUR_REEL_PALETTE.map((color, i) => (
+                        <div key={i} className="spill-color-segment" style={{ backgroundColor: color }} />
+                      ))}
+                      <div className="spill-mobile-playhead-line" style={{ left: `${progressPct}%` }} />
+                    </div>
+                    <div
+                      className="spill-mobile-seek-hit"
+                      role="slider"
+                      tabIndex={0}
+                      aria-label="Seek"
+                      aria-valuemin={0}
+                      aria-valuemax={Math.round(filmDuration)}
+                      aria-valuenow={Math.round(currentTime)}
+                      aria-valuetext={formatTime(currentTime)}
+                      onPointerDown={handleSeekPointerDown}
+                      onPointerMove={handleSeekPointerMove}
+                      onPointerUp={handleSeekPointerEnd}
+                      onPointerCancel={handleSeekPointerEnd}
+                      onKeyDown={handleSeekKeyDown}
+                    />
                   </div>
                   <div className="spill-mobile-seek-meta">
                     <span>Drag to scrub</span>
@@ -956,12 +1152,12 @@ export function LandingPage() {
                     type="button"
                     className="spill-mobile-sec-btn"
                     onClick={handleMobileFullscreen}
-                    aria-label="Fullscreen"
-                    title={videoAR === 'portrait' ? 'Fullscreen Portrait' : 'Fullscreen Landscape'}
+                    aria-label={cinemaFullscreen ? 'Exit fullscreen' : 'Fullscreen'}
+                    title={cinemaFullscreen ? 'Exit fullscreen' : 'Fullscreen'}
                   >
                     <svg className="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden="true">
-                      {videoAR === 'portrait' ? (
-                        <path d="M8 3H5a2 2 0 00-2 2v14a2 2 0 002 2h3M16 3h3a2 2 0 012 2v14a2 2 0 01-2 2h-3" />
+                      {cinemaFullscreen ? (
+                        <path d="M8 8H4v3m12 0V8h-4m0 8h4v-3M4 13v3h4" />
                       ) : (
                         <path d="M8 3H5a2 2 0 00-2 2v3m18 0V5a2 2 0 00-2-2h-3m0 18h3a2 2 0 002-2v-3M3 16v3a2 2 0 002 2h3" />
                       )}
@@ -974,7 +1170,7 @@ export function LandingPage() {
 
           </div>
 
-        ) : cinemaMode && !isMobile ? (
+        ) : cinemaMode && !mobileCinema ? (
           /* ══ DESKTOP CINEMA MODE (Frame 3) ══ */
           <div className="spill-cinema-wrapper">
             <VideoPlayer key={currentFilm.id} poster={posterUrl}>
@@ -1172,6 +1368,7 @@ export function LandingPage() {
         onAdd={handleAddFilm}
         onRemove={handleRemoveFilm}
         onClose={() => setCollectionOpen(false)}
+        portalTarget={cinemaFullscreen ? mobileLayoutRef.current : null}
       />
 
       {/* ── Design Notes Modal ── */}

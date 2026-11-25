@@ -26,6 +26,8 @@ export interface CollectionPanelProps {
   /** Remove a visitor-added film. */
   onRemove: (id: string) => void;
   onClose: () => void;
+  /** Render inside the fullscreen element so the panel is visible in native fullscreen. */
+  portalTarget?: HTMLElement | null;
 }
 
 function formatDuration(seconds: number): string {
@@ -53,26 +55,104 @@ export function CollectionPanel({
   onAdd,
   onRemove,
   onClose,
+  portalTarget,
 }: CollectionPanelProps) {
   const touchStartY = useRef<number | null>(null);
   const [playbackIdInput, setPlaybackIdInput] = useState('');
   const [titleInput, setTitleInput] = useState('');
   const [addError, setAddError] = useState<string | null>(null);
 
+  // Keyboard navigation: ↑/↓ (or ←/→) move through the cards, Enter plays the
+  // highlighted film. The highlighted card is the one that owns focus, so the
+  // native Enter/Space activation stays intact for both cards and remove buttons.
+  const [focusedIndex, setFocusedIndex] = useState(0);
+  const focusedIndexRef = useRef(0);
+  const cardRefs = useRef<Array<HTMLButtonElement | null>>([]);
+  const filmsRef = useRef(films);
+  filmsRef.current = films;
+
+  // When the panel opens (or the playing film changes), highlight the current film.
+  useEffect(() => {
+    if (!open) return;
+    const list = filmsRef.current;
+    const index = Math.max(0, list.findIndex((film) => film.id === currentFilmId));
+    focusedIndexRef.current = index;
+    setFocusedIndex(index);
+    // The portal is already mounted by the time effects run, so focus directly
+    // (no requestAnimationFrame — it is throttled in background tabs).
+    const button = cardRefs.current[index];
+    button?.focus({ preventScroll: true });
+    button?.scrollIntoView({ block: 'nearest' });
+  }, [open, currentFilmId]);
+
   useEffect(() => {
     if (!open) return;
 
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key !== 'Escape') return;
-      // Close only the panel; don't also drop the house lights.
-      event.stopPropagation();
-      event.preventDefault();
-      onClose();
+      if (event.key === 'Escape') {
+        // Close only the panel; don't also drop the house lights.
+        event.stopPropagation();
+        event.preventDefault();
+        onClose();
+        return;
+      }
+
+      // Typing in the add form (playback ID / title) keeps normal text editing.
+      const target = event.target as HTMLElement | null;
+      if (
+        target &&
+        (target.tagName === 'INPUT' ||
+          target.tagName === 'TEXTAREA' ||
+          target.isContentEditable)
+      ) {
+        return;
+      }
+
+      const list = filmsRef.current;
+      if (!list.length) return;
+      const last = list.length - 1;
+      let next: number | null = null;
+      if (event.key === 'ArrowDown' || event.key === 'ArrowRight') {
+        next = focusedIndexRef.current >= last ? 0 : focusedIndexRef.current + 1;
+      } else if (event.key === 'ArrowUp' || event.key === 'ArrowLeft') {
+        next = focusedIndexRef.current <= 0 ? last : focusedIndexRef.current - 1;
+      } else if (event.key === 'Home') {
+        next = 0;
+      } else if (event.key === 'End') {
+        next = last;
+      }
+
+      if (next !== null) {
+        // Stop the player's own arrow hotkeys (seek / volume) from firing too.
+        event.preventDefault();
+        event.stopPropagation();
+        focusedIndexRef.current = next;
+        setFocusedIndex(next);
+        const button = cardRefs.current[next];
+        button?.focus({ preventScroll: true });
+        button?.scrollIntoView({ block: 'nearest' });
+        return;
+      }
+
+      if (event.key === 'Enter') {
+        const interactive =
+          target instanceof Element
+            ? target.closest('button, a, input, textarea, select, [role="button"]')
+            : null;
+        // Remove buttons keep their own Enter behaviour; the panel background
+        // and the film cards all play the highlighted film.
+        if (interactive && !interactive.classList.contains('spill-collection-select')) return;
+        const film = list[focusedIndexRef.current];
+        if (!film) return;
+        event.preventDefault();
+        event.stopPropagation();
+        onSelect(film.id);
+      }
     };
 
     window.addEventListener('keydown', handleKeyDown, true);
     return () => window.removeEventListener('keydown', handleKeyDown, true);
-  }, [open, onClose]);
+  }, [open, onClose, onSelect]);
 
   // Clear the add form whenever the panel closes.
   useEffect(() => {
@@ -202,12 +282,19 @@ export function CollectionPanel({
                 key={film.id}
                 className={`spill-collection-card${active ? ' is-active' : ''}${
                   film.custom ? ' is-custom' : ''
-                }`}
+                }${focusedIndex === index ? ' is-focused' : ''}`}
               >
                 <button
                   type="button"
+                  ref={(element) => {
+                    cardRefs.current[index] = element;
+                  }}
                   className="spill-collection-select"
                   onClick={() => onSelect(film.id)}
+                  onFocus={() => {
+                    focusedIndexRef.current = index;
+                    setFocusedIndex(index);
+                  }}
                   aria-pressed={active}
                   aria-label={`${film.title}, ${durationLabel}${active ? ', now playing' : ''}`}
                 >
@@ -262,9 +349,11 @@ export function CollectionPanel({
           })}
         </div>
 
-        <p className="spill-collection-footnote">Select a film to load its Mux stream.</p>
+        <p className="spill-collection-footnote">
+          Use ↑ ↓ to browse, Enter to play. Select a film to load its Mux stream.
+        </p>
       </div>
     </div>,
-    document.body
+    portalTarget ?? document.body
   );
 }
